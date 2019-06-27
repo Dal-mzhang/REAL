@@ -11,7 +11,7 @@ perl transferWA.pl #create waveforms with corrected amplitude to calculate local
 (It is optional. You don't need to do this if you don't want to estimate magnitude)
 
 2. pick the first arrivals of P and S phases using STA/LTA method (skip it to save time)
-cd Pick
+cd Pick (unzip 20161014.zip and move to step 3 to save time)
 python trigger_p_amp.py #create P picks and amplitudes using STA/LTA
 python trigger_s_amp.py #create S picks and amplitudes using STA/LTA
 (I have been working on earthquake association and location using machine-learning picks and REAL)
