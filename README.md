@@ -2,7 +2,7 @@ The REAL package contains following main files:
 1) REAL: code for Rapid Earthquake Association and Location 
 2) VELEST: code for 1-D inversion of velocities and hypocenter locations
 3) domo_syn: demo for synthetic tests
-4) deom_real: demo for real data
+4) demo_real: demo for real data
 
 Usage:
 See user guide and README files
