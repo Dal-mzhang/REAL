@@ -68,7 +68,7 @@ with open("../Data/station.dat", "r") as f:
                 trig_on = on_of[i,0]
                 trig_of = on_of[i,1]
                 trig_off = int(trig_of + (trig_of - trig_on)*4.0)
-                #1000 is from meter to micro
+                #1000 is from meter to millimeter (mm) see Hutton and Boore (1987)
                 amp = max(max(abs(datatre[trig_on:trig_off])),max(abs(datatrn[trig_on:trig_off])))*1000
                 if max(cft[trig_on:trig_of]) > 10.0:
                     f.write('{} {} {}\n'.format((tstart+trig_on/df),max(cft[trig_on:trig_of]),amp))
