@@ -25,6 +25,9 @@ python taup_tt.py # bulid a traveltime table
 (You may change the velocity model following TauP model format)
 perl runREAL.pl
 (Amplitudes in pick files are used for magnitude estimation but they are optional. If you don't have amplitudes, set as 0.0)
+cd t_dist
+awk -f pha_t-dist.awk #create travel time vs. distance
+t_dist.m (matlab) #roughly estimate association result from travel time vs. distance
 
 4. refine earthquake locations using VELEST
 cd VELEST
