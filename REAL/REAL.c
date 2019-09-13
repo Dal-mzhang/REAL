@@ -29,6 +29,7 @@
  *Revision history:
  *  June     2018       M. Zhang    Initial version in C 
  *  June     2019		M. Zhang	Release version 1.0
+ *  Sept.    2019       M. Zhang    Release version 1.1
  ************************************************************************/
 
 #include <stdio.h>
@@ -41,9 +42,6 @@
 #define CATALOGSEL "catalog_sel.txt"
 #define RESOLUTION "resolution.txt"
 
-#define D2R  .017453292519943295769237
-#define R2D    57.2957795130823208768
-/*default to process one day continuous data*/
 //#define MAXTIME 86400.00 //one day
 #define MAXTIME 2700000.00 //one month
 
@@ -74,6 +72,36 @@ typedef struct reselect{
 	int ntotal1;
 } SELECT;
 
+
+typedef struct picks{
+    char net[5];
+    char sta[8];
+    char phase[5];
+    double abs_pk;
+    double pk;
+    double amp;
+    double res;
+    double baz;
+    double weig;
+    double mag;
+} PICK;
+
+typedef struct clearups{
+	char otime[50];
+	double atime;
+	double std;
+	double lat;
+	double lon;
+	double dep;
+    double mag_median;
+    double mag_std;
+	int pcount;
+	int scount;
+	int pscount;
+    double gap;
+    PICK *pk;
+} CLEARUP;
+
 typedef struct trigg{
 	double trig;
 	double weight;
@@ -89,7 +117,7 @@ typedef struct stationinfo{
     double elev;
 } STATION;
 
-void GCinit(const double*,const double*,const double*,const double*,double*);
+void ddistaz(double,double,double,double,double*,double*);
 double CalculateMedian(double *,int);
 double CalculateMean(double *,int);
 double CalculateStd(double *,double,int);
@@ -101,11 +129,12 @@ int Readstation(char *, STATION *,int);
 int DetermineNp(double **,int, int);
 int DetermineNg(TRIG **,TRIG **,int, int);
 void SortTriggers(TRIG **,TRIG **,double **,double **,int,int);
-void SortTriggers0(TRIG **,TRIG **,double **,double **,double**,double**,int,int);
+void SortTriggers0(TRIG **,TRIG **,double **,double **,double**,double**,double**,double**,int,int);
 void DeleteOne(double **,int,int,int);
 int DetermineNprange(double **,double,int,int);
 void DetermineNps0range(double **,double **,double,double,double,double,int,int);
 int ReselectFinal(SELECT *,int);
+int ReselectClear(CLEARUP *,int);
 void Accounttriggers_homo(double,double,double,double,double,double,int);
 void Accounttriggers_layer(double,double,double,double,double,double,int);
 void Sortpscounts(double **,int);
@@ -126,6 +155,7 @@ int *np0_start,*np0_end,*ns0_start,*ns0_end;
 double tpmin0,tdx,tdh,trx,trh;
 int ppp;
 double dtps;
+double GAPTH;
 
 int Nst = 500; //maximum number of stations
 int Nps = 20000; //maximum number of P/S picks recorded at one station
@@ -140,7 +170,7 @@ int main(int argc, char **argv){
 	int test,error,pcount,scount,nnn,ps,nppp,nselect;
 	double dx,dh,rx,rh;
 	double tp0_cal,ts0_cal,tp_cal,ts_cal,tp_pre,ts_pre,tp_pre_b,ts_pre_b,tp_pre_e,ts_pre_e;
-	double median,std,GCarc,distmax;
+	double median,std,GCarc,distmax,baz;
 	double told,lonref,latref,elevref,latref0,lonref0;
 	double lonmin,lonmax,latmin,latmax,lat0,lon0,dep;
 	double stlamin,stlamax,stlomin,stlomax;
@@ -150,8 +180,9 @@ int main(int argc, char **argv){
 	char otime[50];
 	int igrid,ires,ielev,ig,ih,im,iremove;
 	SELECT *RELC;
-	double **pamp0,**samp0,*mag;
-	double mag_median,mag_std,p_mag,s_mag,pamp,samp;
+    CLEARUP *CLEAR;
+	double **pamp0,**samp0,**pweight0,**sweight0,*mag;
+	double mag_median,mag_std,p_mag,s_mag;
 	int nyear,nmon,nday;
 	double tpmin,tpmax,tsmin,tsmax,Maxt0;
 	
@@ -165,12 +196,13 @@ int main(int argc, char **argv){
 	lonref0 = -10000;
     s_vp0 = 10000;
     s_vs0 = 10000;
+    GAPTH = 250; //station azimuth gap threshold
 
 	for(i=1;!error && i<argc; i++){
 		if(argv[i][0] == '-'){
 			switch(argv[i][1]){
 				case 'R':
-					sscanf(&argv[i][2],"%lf/%lf/%lf/%lf/%lf/%lf/%lf",&rx,&rh,&dx,&dh,&tint,&latref0,&lonref0);
+					sscanf(&argv[i][2],"%lf/%lf/%lf/%lf/%lf/%lf/%lf/%lf",&rx,&rh,&dx,&dh,&tint,&GAPTH,&latref0,&lonref0);
 					break;
 				case 'S':
 					sscanf(&argv[i][2],"%d/%d/%d/%d/%lf/%lf/%lf/%lf/%d",&np0,&ns0,&nps0,&nppp,&std0,&dtps,&nrt,&rsel,&ires);
@@ -195,12 +227,12 @@ int main(int argc, char **argv){
 	//Usage
     if(argc < 3 || error == 1){
         fprintf(stderr, "Usage:  Rapid Earthquake Association and Location (REAL)\n");
-        fprintf(stderr, "   -D(nyear/nmon/nday) -R(rx/rh/tdx/tdh/tint[/latref0/lonref0]]) -V(vp0/vs0/[s_vp0/s_vs0/ielev])\n");
+        fprintf(stderr, "   -D(nyear/nmon/nday) -R(rx/rh/tdx/tdh/tint[/gap/latref0/lonref0]]) -V(vp0/vs0/[s_vp0/s_vs0/ielev])\n");
         fprintf(stderr, "   -S(np0/ns0/nps0/nppp/std0/dtps/nrt[/rsel/ires]) [-G(trx/trh/tdx/tdh)] station pickdir [ttime]\n");
         fprintf(stderr, "   ------------------------------------explanation--------------------------------------------\n");
         fprintf(stderr, "   -D: date of the day (year/month/day)\n");
         fprintf(stderr, "   -R: search ranges and grids around the nearest station in horizontal direction and depth,\n");
-        fprintf(stderr, "       phase and event interval, reference location (degree/km/degree/km/sec[/degree/degree])\n");
+        fprintf(stderr, "       event interval, gap threshold, reference location (degree/km/degree/km/sec[degree/degree/degree])\n");
         fprintf(stderr, "   -V: average velocities and near-surface velocities of P and S waves, station elevation_or_not\n");
 		fprintf(stderr, "       (km/s|km/s|[km/s|km/s|int])\n");
         fprintf(stderr, "   -S: thresholds: number of picks (P,S,P+S),effective number of grids,residual threshold, \n");
@@ -230,10 +262,9 @@ int main(int argc, char **argv){
 		if(ST[i].stla < stlamin) stlamin = ST[i].stla;
 		if(ST[i].stlo < stlomin) stlomin = ST[i].stlo;
 	}
-	GCinit(&stlamin,&stlomin,&stlamax,&stlomax,&distmax);
-
-
-	/* read triggers */
+	ddistaz(stlamin,stlomin,stlamax,stlomax,&distmax,&baz);
+	
+    /* read triggers */
 	if(igrid == 0){strcpy(dir,argv[6]);}else{strcpy(dir,argv[7]);}
 
 	TGP = (TRIG **)malloc(sizeof(TRIG*)*Nst);
@@ -307,6 +338,8 @@ int main(int argc, char **argv){
 	strig0 = (double **) malloc(sizeof(double*)*Nst);
 	pamp0  = (double **) malloc(sizeof(double*)*Nst);
 	samp0  = (double **) malloc(sizeof(double*)*Nst);
+	pweight0  = (double **) malloc(sizeof(double*)*Nst);
+	sweight0  = (double **) malloc(sizeof(double*)*Nst);
 	for(i=0;i<Nst;i++){
 		ptrig[i] = (double *)malloc(sizeof(double)*Nps);
 		strig[i] = (double *)malloc(sizeof(double)*Nps);
@@ -314,18 +347,22 @@ int main(int argc, char **argv){
 		strig0[i] = (double *)malloc(sizeof(double)*Nps);
 		pamp0[i] = (double *)malloc(sizeof(double)*Nps);
 		samp0[i] = (double *)malloc(sizeof(double)*Nps);
+		pweight0[i] = (double *)malloc(sizeof(double)*Nps);
+		sweight0[i] = (double *)malloc(sizeof(double)*Nps);
 	}
 	
 	//default number of events (picks*Nst)
     RELC = (SELECT *)malloc(sizeof(SELECT)*Nst*Nps);
+    CLEAR = (CLEARUP *)malloc(sizeof(CLEARUP)*Nst*Nps);
+    for(i=0;i<Nst*Nps;i++)CLEAR[i].pk = (PICK *)malloc(sizeof(PICK)*Nst*2); 
 	/* determine traveltime within one grid*/
 	ptw = sqrt(2*(dx*111.19)*(dx*111.19)+dh*dh)/vp0;
 	stw = sqrt(2*(dx*111.19)*(dx*111.19)+dh*dh)/vs0;
-	if(tint < stw/2.0)tint=stw/2.0;
-	fprintf(stderr,"p-window= %.2f sec; s-window= %.2f sec; phase&event-window= %.2f sec\n",nrt*ptw,nrt*stw,tint);
+	if(tint < stw)tint=stw;
+	fprintf(stderr,"p-window= %.2f sec; s-window= %.2f sec; event-window= %.2f sec\n",nrt*ptw,nrt*stw,tint);
     SortTriggers(TGP,TGS,ptrig,strig,Nst,Nps);
 	//sort triggers and their amplitudes
-	SortTriggers0(TGP,TGS,ptrig0,strig0,pamp0,samp0,Nst,Nps);
+	SortTriggers0(TGP,TGS,ptrig0,strig0,pamp0,samp0,pweight0,sweight0,Nst,Nps);
 	
 	nlat = (int)(2*rx/dx + 1);
     nlon = (int)(2*rx/dx + 1);
@@ -453,7 +490,7 @@ int main(int argc, char **argv){
 			RELC[mmm].nofs1 = pscounts[nnn-1][5];
 			RELC[mmm].ntotal1 = pscounts[nnn-1][7];
 
-			fprintf(stderr,"%5d %10s %12.4lf %8.4lf %12.4lf %12.4lf %12.4lf %4d %4d %4d\n",mmm+1,otime,pscounts[nnn-1][3],pscounts[nnn-1][6],pscounts[nnn-1][0],pscounts[nnn-1][1],pscounts[nnn-1][2],(int)(pscounts[nnn-1][4]),(int)(pscounts[nnn-1][5]),(int)(pscounts[nnn-1][7]));
+             fprintf(stderr,"%5d %10s %12.4lf %8.4lf %12.4lf %12.4lf %12.4lf %4d %4d %4d\n",mmm+1,otime,pscounts[nnn-1][3],pscounts[nnn-1][6],pscounts[nnn-1][0],pscounts[nnn-1][1],pscounts[nnn-1][2],(int)(pscounts[nnn-1][4]),(int)(pscounts[nnn-1][5]),(int)(pscounts[nnn-1][7]));
 			mmm++;
 			
             iremove = 0;
@@ -465,7 +502,7 @@ int main(int argc, char **argv){
 					lon0 = pscounts[nnn-1][1];
 					dep  = pscounts[nnn-1][2];
 				
-					GCinit(&lat0,&lon0,&ST[k].stla,&ST[k].stlo,&GCarc);
+					ddistaz(ST[k].stla,ST[k].stlo,lat0,lon0,&GCarc,&baz);
 					if(igrid == 0){
 						tp_cal = sqrt((GCarc*111.19)*(GCarc*111.19) + dep*dep)/vp0 + ST[k].elev/s_vp0;
 					}else{
@@ -501,14 +538,13 @@ int main(int argc, char **argv){
 
 	fp1 = fopen(CATALOGSEL,"w");
 	fp2 = fopen(PHASESEL,"w");
-	/*select again to keep the most reliable event within a time window and output the selected events only*/
+	/*Reselect to keep the most reliable event within a time window*/
 	nselect = ReselectFinal(RELC,mmm);
-	fprintf(stderr,"before selection: %d\n after selection: %d\n",mmm,nselect);
+	fprintf(stderr,"before first selection: %d\n after first selection: %d\n",mmm,nselect);
 
 	mag = (double *)malloc(Nst*sizeof(double));
 	for(i=0;i<nselect;i++){
 		pcount = 0;scount = 0;ps = 0;
-		fprintf(fp2,"%5d %20s %12.4lf %8.4lf %12.4lf %12.4lf %12.4lf\n",i+1,RELC[i].otime1,RELC[i].atime1,RELC[i].std1,RELC[i].lat1,RELC[i].lon1,RELC[i].dep1);
 		im = 0;
 		for(k=0;k<Nst;k++){
 			mag[k] = -100;
@@ -516,7 +552,7 @@ int main(int argc, char **argv){
 			lon0 = RELC[i].lon1;
 			dep  = RELC[i].dep1;
 				
-			GCinit(&lat0,&lon0,&ST[k].stla,&ST[k].stlo,&GCarc);
+			ddistaz(ST[k].stla,ST[k].stlo,lat0,lon0,&GCarc,&baz);
 			if(igrid == 0){
 				tp_cal = sqrt((GCarc*111.19)*(GCarc*111.19) + dep*dep)/vp0 + ST[k].elev/s_vp0;
 				ts_cal = sqrt((GCarc*111.19)*(GCarc*111.19) + dep*dep)/vs0 + ST[k].elev/s_vs0;
@@ -544,10 +580,20 @@ int main(int argc, char **argv){
 			for(j=0;j<NNps;j++){
 				//rsel*std to remove some picks with large residuals
 				if(ptrig0[k][j] > tp_pre_b && ptrig0[k][j] < tp_pre_e && fabs(ptrig0[k][j]-tp_pre) < rsel*RELC[i].std1){
-					fprintf(fp2,"%s %s P %12.4lf %12.4lf %12.4e %12.4lf\n",ST[k].net,ST[k].sta,ptrig0[k][j],ptrig0[k][j]-RELC[i].atime1,pamp0[k][j],ptrig0[k][j]-tp_pre);
-					pamp = pamp0[k][j];
-					p_mag = log(pamp)/log(10) + 1.110*log(GCarc*111.19/100)/log(10) + 0.00189*(GCarc*111.19-100)+3.0;	
-					pcount++; ps++;
+					strcpy(CLEAR[i].pk[ps].net,ST[k].net);
+					strcpy(CLEAR[i].pk[ps].sta,ST[k].sta);
+					strcpy(CLEAR[i].pk[ps].phase,"P");
+					CLEAR[i].pk[ps].abs_pk = ptrig0[k][j];
+					CLEAR[i].pk[ps].pk = ptrig0[k][j]-RELC[i].atime1;
+					CLEAR[i].pk[ps].amp = pamp0[k][j];
+					CLEAR[i].pk[ps].res = ptrig0[k][j]-tp_pre;
+					CLEAR[i].pk[ps].baz = baz;
+					CLEAR[i].pk[ps].weig = pweight0[k][j];
+
+					p_mag = log(pamp0[k][j])/log(10) + 1.110*log(GCarc*111.19/100)/log(10) + 0.00189*(GCarc*111.19-100)+3.0;	
+					CLEAR[i].pk[ps].mag = p_mag;
+
+                    pcount++; ps++;
 					ptemp = ptrig0[k][j];
 					break;
 				}	
@@ -558,36 +604,69 @@ int main(int argc, char **argv){
 			//rsel*std to remove some picks with large residuals
 			for(j=0;j<NNps;j++){
 				if((ts_pre-tp_pre) > dtps && fabs(ptemp - strig0[k][j]) > dtps && strig0[k][j] > ts_pre_b && strig0[k][j] < ts_pre_e && fabs(strig0[k][j]-ts_pre) < rsel*RELC[i].std1){
-					fprintf(fp2,"%s %s S %12.4lf %12.4lf %12.4e %12.4f\n",ST[k].net,ST[k].sta,strig0[k][j],strig0[k][j]-RELC[i].atime1,samp0[k][j],strig0[k][j]-ts_pre);
-					samp = samp0[k][j];
-					s_mag = log(samp)/log(10) + 1.110*log(GCarc*111.19/100)/log(10) + 0.00189*(GCarc*111.19-100)+3.0;	
-					scount++; ps++;
+					strcpy(CLEAR[i].pk[ps].net,ST[k].net);
+                    strcpy(CLEAR[i].pk[ps].sta,ST[k].sta);
+                    strcpy(CLEAR[i].pk[ps].phase,"S");
+                    CLEAR[i].pk[ps].abs_pk = strig0[k][j];
+                    CLEAR[i].pk[ps].pk = strig0[k][j]-RELC[i].atime1;
+                    CLEAR[i].pk[ps].amp = samp0[k][j];
+                    CLEAR[i].pk[ps].res = strig0[k][j]-ts_pre;
+                    CLEAR[i].pk[ps].baz = baz; 
+                    CLEAR[i].pk[ps].weig = sweight0[k][j];
+					
+                    s_mag = log(samp0[k][j])/log(10) + 1.110*log(GCarc*111.19/100)/log(10) + 0.00189*(GCarc*111.19-100)+3.0;	
+					CLEAR[i].pk[ps].mag = s_mag;
+					
+                    scount++; ps++;
 					break;
 				}
 			}
-			
-			//if(GCarc*111.19 > 10 && (p_mag > -90 || s_mag > -90)){
-			if(p_mag > -90 || s_mag > -90){
-				if( p_mag > s_mag){
-					mag[im] = p_mag;
-					im++;
-				}else{
-					mag[im] = s_mag;
-					im++;
-				}
-			}
-		}
-		
-		if(im < 2){
-			mag_median = -100.0;
-			mag_std = -100.0;
-		}else{
-			mag_median = CalculateMedian(mag,im);
-			mag_std = CalculateStd(mag,mag_median,im);
-		}
-		
-		fprintf(fp1,"%5d %20s %12.4lf %8.4lf %12.4lf %12.4lf %12.4lf %8.3lf %8.3lf %4d %4d %4d\n",i+1,RELC[i].otime1,RELC[i].atime1,RELC[i].std1,RELC[i].lat1,RELC[i].lon1,RELC[i].dep1,mag_median,mag_std,pcount,scount,ps);
+            //if(GCarc*111.19 > 10 && (p_mag > -90 || s_mag > -90)){
+            if(p_mag > -90 || s_mag > -90){
+                if( p_mag > s_mag){
+                    mag[im] = p_mag;
+                    im++;
+                }else{
+                    mag[im] = s_mag;
+                    im++;
+                }
+            }
+        }
+
+        if(im < 2){
+            mag_median = -100.0;
+            mag_std = -100.0;
+        }else{
+            mag_median = CalculateMedian(mag,im);
+            mag_std = CalculateStd(mag,mag_median,im);
+        }
+
+        strcpy(CLEAR[i].otime,RELC[i].otime1);
+        CLEAR[i].atime = RELC[i].atime1;
+        CLEAR[i].std = RELC[i].std1;
+        CLEAR[i].lat = RELC[i].lat1;
+        CLEAR[i].lon = RELC[i].lon1;
+        CLEAR[i].dep = RELC[i].dep1;
+        CLEAR[i].mag_median = mag_median; //may update in ReselectClear
+        CLEAR[i].mag_std = mag_std; //may update in ReselectClear
+        CLEAR[i].pcount = pcount; //may update in ReselectClear
+        CLEAR[i].scount = scount; //may update in ReselectClear
+        CLEAR[i].pscount = ps; //may update in ReselectClear
+        CLEAR[i].gap = -100; //will update in ReselectClear
+
 	}
+    
+	/*Reselect to remove unstable events with large gap and exclude one pick is associated more than once*/
+    mmm = ReselectClear(CLEAR,nselect);
+    fprintf(stderr,"before second selection: %d\n after second selection: %d\n",nselect,mmm);
+    
+    for(i=0;i<mmm;i++){
+		fprintf(fp1,"%5d %20s %12.4lf %8.4lf %12.4lf %12.4lf %12.4lf %8.3lf %8.3lf %4d %4d %4d %8.2lf\n",i+1,CLEAR[i].otime,CLEAR[i].atime,CLEAR[i].std,CLEAR[i].lat,CLEAR[i].lon,CLEAR[i].dep,CLEAR[i].mag_median,CLEAR[i].mag_std,CLEAR[i].pcount,CLEAR[i].scount,CLEAR[i].pscount,CLEAR[i].gap);
+		fprintf(fp2,"%5d %20s %12.4lf %8.4lf %12.4lf %12.4lf %12.4lf %8.3lf %8.3lf %4d %4d %4d %8.2lf\n",i+1,CLEAR[i].otime,CLEAR[i].atime,CLEAR[i].std,CLEAR[i].lat,CLEAR[i].lon,CLEAR[i].dep,CLEAR[i].mag_median,CLEAR[i].mag_std,CLEAR[i].pcount,CLEAR[i].scount,CLEAR[i].pscount,CLEAR[i].gap);
+        for(j=0;j<CLEAR[i].pscount;j++){
+	        fprintf(fp2,"%5s %8s %5s %12.4lf %12.4lf %12.4e %12.4lf %12.4lf %12.4lf\n",CLEAR[i].pk[j].net,CLEAR[i].pk[j].sta,CLEAR[i].pk[j].phase,CLEAR[i].pk[j].abs_pk,CLEAR[i].pk[j].pk,CLEAR[i].pk[j].amp,CLEAR[i].pk[j].res,CLEAR[i].pk[j].weig,CLEAR[i].pk[j].baz);
+        }
+    }
 
 	fclose(fp1);
 	fclose(fp2);
@@ -608,10 +687,139 @@ int main(int argc, char **argv){
 	free(ptrig0);free(strig0);
 	free(pamp0);free(samp0);
 	free(ST);free(RELC);
+    free(CLEAR);
 	free(TB);free(mag);
 	return 0;
 }
 
+//1. remove unstable events with large station gap
+//2. If one pick is associated with multiple events (although the possibility is very low if you have suitable parameter settings),
+//   keep the pick with smallest individual traveltime residual and remove others.
+int ReselectClear(CLEARUP *CLEAR,int NN){
+	int i,j,k,l,m,idx;
+    double *mag0, *res0, res_median, gap0, gap;
+    int pcount, scount;
+    char net[5],sta[8],phase[5];
+    double abs_pk,pk,amp,res,baz,weig,mag; 
+    //sort baz
+	for(i=0;i<NN;i++){
+        for(j=0;j<CLEAR[i].pscount;j++){
+                for(k=j;k<CLEAR[i].pscount;k++){
+                    if(CLEAR[i].pk[j].baz > CLEAR[i].pk[k].baz){
+                       strcpy(net,CLEAR[i].pk[j].net);
+                       strcpy(sta,CLEAR[i].pk[j].sta);
+                       strcpy(phase,CLEAR[i].pk[j].phase);
+                       abs_pk = CLEAR[i].pk[j].abs_pk;
+                       pk     = CLEAR[i].pk[j].pk;
+                       amp    = CLEAR[i].pk[j].amp;
+                       res    = CLEAR[i].pk[j].res;
+                       baz    = CLEAR[i].pk[j].baz;
+                       weig   = CLEAR[i].pk[j].weig;
+                       mag    = CLEAR[i].pk[j].mag;
+                        
+                       strcpy(CLEAR[i].pk[j].net,CLEAR[i].pk[k].net);
+                       strcpy(CLEAR[i].pk[j].sta,CLEAR[i].pk[k].sta);
+                       strcpy(CLEAR[i].pk[j].phase,CLEAR[i].pk[k].phase);
+                       CLEAR[i].pk[j].abs_pk= CLEAR[i].pk[k].abs_pk;
+                       CLEAR[i].pk[j].pk    = CLEAR[i].pk[k].pk;
+                       CLEAR[i].pk[j].amp   = CLEAR[i].pk[k].amp;
+                       CLEAR[i].pk[j].res   = CLEAR[i].pk[k].res;
+                       CLEAR[i].pk[j].baz   = CLEAR[i].pk[k].baz;
+                       CLEAR[i].pk[j].weig  = CLEAR[i].pk[k].weig;
+                       CLEAR[i].pk[j].mag   = CLEAR[i].pk[k].mag;
+                       
+                       strcpy(CLEAR[i].pk[k].net,net);
+                       strcpy(CLEAR[i].pk[k].sta,sta);
+                       strcpy(CLEAR[i].pk[k].phase,phase);
+                       CLEAR[i].pk[k].abs_pk= abs_pk;
+                       CLEAR[i].pk[k].pk    = pk;
+                       CLEAR[i].pk[k].amp   = amp;
+                       CLEAR[i].pk[k].res   = res;
+                       CLEAR[i].pk[k].baz   = baz;
+                       CLEAR[i].pk[k].weig  = weig;
+                       CLEAR[i].pk[k].mag   = mag;
+                    } 
+                }
+        }
+    }
+    
+    //select based on station azimuth gap 
+	for(i=0;i<NN;i++){
+        gap0 = -100;
+        for(j=0;j<CLEAR[i].pscount-1;j++){
+            k = j+1;
+            gap =  CLEAR[i].pk[k].baz - CLEAR[i].pk[j].baz;
+            if(gap > gap0)gap0 = gap;
+         }
+         //first and last azimuth
+         k = CLEAR[i].pscount-1;
+         gap =  360 + CLEAR[i].pk[0].baz - CLEAR[i].pk[k].baz;
+         if(gap > gap0){gap0 = gap;} 
+         CLEAR[i].gap = gap0;
+     }
+    
+    for(i=0;i<NN;i++){
+         if(CLEAR[i].gap > GAPTH){
+                  NN = NN-1;
+                  for(idx = i; idx < NN; idx++)CLEAR[idx] = CLEAR[idx+1];
+         }
+    }
+
+    //exclude the case that one pick is associated more than once
+	for(i=0;i<NN;i++){
+        for(j=0;j<CLEAR[i].pscount;j++){
+            for(l=0;l<NN,l!=i;l++){
+                for(m=0;m<CLEAR[l].pscount;m++){
+                     if(strcmp(CLEAR[i].pk[j].net,CLEAR[l].pk[m].net) < 1.0e-5 && strcmp(CLEAR[i].pk[j].sta,CLEAR[l].pk[m].sta) < 1.0e-5 && fabs(CLEAR[i].pk[j].abs_pk - CLEAR[l].pk[m].abs_pk) < 1.0e-5){
+                        if(fabs(CLEAR[i].pk[j].res) > fabs(CLEAR[l].pk[m].res)){
+                            CLEAR[i].pscount = CLEAR[i].pscount - 1;
+                            for(idx=j;idx<CLEAR[i].pscount;idx++)CLEAR[i].pk[idx]=CLEAR[i].pk[idx+1];
+                        }else{
+                            CLEAR[l].pscount = CLEAR[l].pscount - 1;
+                            for(idx=m;idx<CLEAR[l].pscount;idx++)CLEAR[l].pk[idx]=CLEAR[l].pk[idx+1];
+                        }
+                     }
+                }
+            }
+        }
+    }
+
+	for(i=0;i<NN;i++){
+        pcount = 0; scount = 0;
+        mag0 = (double *)malloc(CLEAR[i].pscount*sizeof(double));
+        res0 = (double *)malloc(CLEAR[i].pscount*sizeof(double));
+        for(j=0;j<CLEAR[i].pscount;j++){
+            mag0[j] = CLEAR[i].pk[j].mag;
+            res0[j] = CLEAR[i].pk[j].res;
+            if(strcmp(CLEAR[i].pk[j].phase,"P") < 1.0e-5){
+                    pcount++;
+                }else if(strcmp(CLEAR[i].pk[j].phase,"S") < 1.0e-5){
+                    scount++;
+                }
+        }
+        CLEAR[i].mag_median = CalculateMedian(mag0,CLEAR[i].pscount);
+        CLEAR[i].mag_std = CalculateStd(mag0,CLEAR[i].mag_median,CLEAR[i].pscount);
+        res_median = CalculateMedian(res0,CLEAR[i].pscount);
+        CLEAR[i].std = CalculateStd(res0,res_median,CLEAR[i].pscount);
+        CLEAR[i].pcount = pcount;
+        CLEAR[i].scount = scount;
+        CLEAR[i].pscount = pcount+scount;
+        free(mag0);
+        free(res0);
+    }
+
+    for(i=0;i<NN;i++){
+        //select again (0.8*nps0)
+        if(CLEAR[i].pcount < np0 || CLEAR[i].scount < ns0 || CLEAR[i].pscount < nps0*0.8){
+            NN = NN-1;
+            for(idx = i; idx < NN; idx++)CLEAR[idx] = CLEAR[idx+1];
+        }
+    }
+
+    return NN;
+}
+
+//select one event within a short time window
 int ReselectFinal(SELECT *RELC,int m){
 	int i,k,nps;
 	char b[50];
@@ -732,7 +940,7 @@ double CalculateStd(double *arrValue,double median, int max){
 		temp += (arrValue[i] - median)*(arrValue[i] - median);
 	}
 
-	std = sqrt(temp/max);
+	std = sqrt(temp/(max-1));
     return std;
 }
 
@@ -769,30 +977,6 @@ double CalculateMedian(double *arrValue, int max){
     free(value);
     return median;
 }
-
-//Compute great circle (gcarc)
-void GCinit(const double *lat1,const double *lon1,const double *lat2,const double *lon2,double *GCarc){
-    double x1,yp1,z1,x2,y2,z2;
-    double the1,phe1,the2,phe2;
-    the1=(90.0-*lat1)*D2R;         /* convert to radius */
-    phe1=(*lon1)*D2R;
-    the2=(90.0-*lat2)*D2R;
-    phe2=(*lon2)*D2R;
-
-    x1=sin(the1)*cos(phe1);
-    yp1=sin(the1)*sin(phe1);
-    z1=cos(the1);
-    x2=sin(the2)*cos(phe2);
-    y2=sin(the2)*sin(phe2);
-    z2=cos(the2);
-    *GCarc=acos((x1)*(x2)+(yp1)*(y2)+(z1)*(z2));
-	if( fabs(*GCarc-M_PI) <=1.e-16) {
-        fprintf(stderr," The great circle is not determined! (GCinit)\n");
-        exit(1);
-    }
-    *GCarc *= R2D;
-}
-
 
 int Readttime(char *name, TTT *TB, int nmax){
         int i, test;
@@ -1015,7 +1199,7 @@ void SortTriggers(TRIG **tgp,TRIG **tgs,double **array1,double **array2,int m, i
 		array1[i][0] = tgp[i][0].trig;
 		array2[i][0] = tgs[i][0].trig;
 		for(j=1;j<n;j++){
-			if(tgp[i][j].trig - tgp[i][j-1].trig < tint){
+			if(tgp[i][j].trig - tgp[i][j-1].trig < nrt*ptw){
 			   if(tgp[i][j].weight > tgp[i][j-1].weight){
 					array1[i][j] = tgp[i][j].trig;
 					array1[i][j-1] = 1.0e8;
@@ -1026,7 +1210,7 @@ void SortTriggers(TRIG **tgp,TRIG **tgs,double **array1,double **array2,int m, i
 				array1[i][j] = tgp[i][j].trig;
 			}
 			
-			if(tgs[i][j].trig - tgs[i][j-1].trig < tint){
+			if(tgs[i][j].trig - tgs[i][j-1].trig < nrt*stw){
 			   if(tgs[i][j].weight > tgs[i][j-1].weight){
 					array2[i][j] = tgs[i][j].trig;
 					array2[i][j-1] = 1.0e8;
@@ -1058,7 +1242,7 @@ void SortTriggers(TRIG **tgp,TRIG **tgs,double **array1,double **array2,int m, i
     }
 }
 
-void SortTriggers0(TRIG **tgp,TRIG **tgs,double **array1,double **array2,double **pamp,double **samp,int m, int n){
+void SortTriggers0(TRIG **tgp,TRIG **tgs,double **array1,double **array2,double **pamp,double **samp,double **pweight,double **sweight,int m, int n){
 	int i,j,k,l;
 	double a,b,c;
 	
@@ -1096,35 +1280,45 @@ void SortTriggers0(TRIG **tgp,TRIG **tgs,double **array1,double **array2,double 
 		array2[i][0] = tgs[i][0].trig;
 		pamp[i][0] = tgp[i][0].amp;
 		samp[i][0] = tgs[i][0].amp;
+        pweight[i][0] = tgp[i][0].weight;
+        sweight[i][0] = tgs[i][0].weight;
 		for(j=1;j<n;j++){
-			if(tgp[i][j].trig - tgp[i][j-1].trig < tint){
+			if(tgp[i][j].trig - tgp[i][j-1].trig < nrt*ptw){
 			   if(tgp[i][j].weight > tgp[i][j-1].weight){
 					array1[i][j] = tgp[i][j].trig;
 					pamp[i][j] = tgp[i][j].amp;
+                    pweight[i][j] = tgp[i][j].weight;
 					array1[i][j-1] = 1.0e8;
 					pamp[i][j-1] = 0.0;
+                    pweight[i][j-1] = 0.0;
 			   }else{
 					array1[i][j] = 1.0e8;
 					pamp[i][j] = 0.0;
+                    pweight[i][j] = 0.0;
 			   }
 			}else{
 				array1[i][j] = tgp[i][j].trig;
 				pamp[i][j] = tgp[i][j].amp;
+                pweight[i][j] = tgp[i][j].weight;
 			}
 			
-			if(tgs[i][j].trig - tgs[i][j-1].trig < tint){
+			if(tgs[i][j].trig - tgs[i][j-1].trig < nrt*stw){
 			   if(tgs[i][j].weight > tgs[i][j-1].weight){
 					array2[i][j] = tgs[i][j].trig;
 					samp[i][j] = tgs[i][j].amp;
+                    sweight[i][j] = tgs[i][j].weight;
 					array2[i][j-1] = 1.0e8;
 					samp[i][j-1] = 0.0;
+                    sweight[i][j-1] = 0.0;
 			   }else{
 					array2[i][j] = 1.0e8;
 					samp[i][j] = 0.0;
+                    sweight[i][j] = 0.0;
 			   }
 			}else{
 				array2[i][j] = tgs[i][j].trig;
 				samp[i][j] = tgs[i][j].amp;
+                sweight[i][j] = tgs[i][j].weight;
 			}
 		}
 	}
@@ -1135,18 +1329,24 @@ void SortTriggers0(TRIG **tgp,TRIG **tgs,double **array1,double **array2,double 
                 if (array1[i][j] > array1[i][k]){
                     a = array1[i][j];
 					b = pamp[i][j];
+                    c = pweight[i][j];
                     array1[i][j] = array1[i][k];
 					pamp[i][j] = pamp[i][k];
+                    pweight[i][j] = pweight[i][k];
                     array1[i][k] = a;
 					pamp[i][k] = b;
+                    pweight[i][k] = c;
                 }
                 if (array2[i][j] > array2[i][k]){
                     a = array2[i][j];
 					b = samp[i][j];
+                    c = sweight[i][j];
                     array2[i][j] = array2[i][k];
 					samp[i][j] = samp[i][k];
+                    sweight[i][j] = sweight[i][k];
                     array2[i][k] = a;
 					samp[i][k] = b;
+                    sweight[i][k] = c;
                 }
             }
         }
@@ -1198,7 +1398,7 @@ void Sortpscounts(double **pscounts0,int np){
 void Accounttriggers_homo(double lat0,double lon0,double dep,double latref,double lonref,double elevref, int l){
 	int pcount,scount,ps;
 	int i,j,k;
-	double GCarc,median,std,ptemp;
+	double GCarc,baz,median,std,ptemp;
 	double tp0_cal,tp_cal,ts_cal,tp_pre,ts_pre,tp_pre_b,tp_pre_e,ts_pre_b,ts_pre_e;
 	extern double vp0,vs0,s_vp0,s_vs0;
 	extern double nrt,ptw,stw,tpmin0;
@@ -1216,12 +1416,12 @@ void Accounttriggers_homo(double lat0,double lon0,double dep,double latref,doubl
 	torg = (double *)malloc(2*Nst*sizeof(double));   
 	for(k=0;k<2*Nst;k++)torg[k] = 0.0;
 	
-	GCinit(&lat0,&lon0,&latref,&lonref,&GCarc);
+	ddistaz(lat0,lon0,latref,lonref,&GCarc,&baz);
 	tp0_cal = sqrt((GCarc*111.19)*(GCarc*111.19) + dep*dep)/vp0 + elevref/s_vp0;
 
 
 	for(i=0;i<Nst;i++){
-		GCinit(&lat0,&lon0,&ST[i].stla,&ST[i].stlo,&GCarc);
+		ddistaz(ST[i].stla,ST[i].stlo,lat0,lon0,&GCarc,&baz);
 		tp_cal = sqrt((GCarc*111.19)*(GCarc*111.19) + dep*dep)/vp0 + ST[i].elev/s_vp0;
 		ts_cal = sqrt((GCarc*111.19)*(GCarc*111.19) + dep*dep)/vs0 + ST[i].elev/s_vs0;
 						
@@ -1281,7 +1481,7 @@ void Accounttriggers_homo(double lat0,double lon0,double dep,double latref,doubl
 void Accounttriggers_layer(double lat0,double lon0,double dep,double latref,double lonref,double elevref, int l){
 	int pcount,scount,ps;
 	int i,j,k,ig,ih;
-	double GCarc,median,std,ptemp;
+	double GCarc,baz,median,std,ptemp;
 	double tp0_cal,tp_cal,ts_cal,tp_pre,ts_pre,tp_pre_b,tp_pre_e,ts_pre_b,ts_pre_e;
 	extern double vp0,vs0,s_vp0,s_vs0;
 	extern double nrt,ptw,stw,tpmin0;
@@ -1293,19 +1493,18 @@ void Accounttriggers_layer(double lat0,double lon0,double dep,double latref,doub
 	extern double trx,tdx,tdh,dtps;
 	double *torg;
 	
-
 	pcount = 0;scount = 0;ps = 0;
 		
 	torg = (double *)malloc(2*Nst*sizeof(double));   
 	for(k=0;k<2*Nst;k++)torg[k] = 0.0;
 	
-	GCinit(&lat0,&lon0,&latref,&lonref,&GCarc);
+	ddistaz(lat0,lon0,latref,lonref,&GCarc,&baz);
 	ih = round(dep/tdh);
 	ig = ih*rint(trx/tdx) + rint(GCarc/tdx);
 	tp0_cal = TB[ig].ptime + (GCarc - TB[ig].gdist)*TB[ig].prayp + (dep - TB[ig].dep)*TB[ig].phslow + elevref/s_vp0;
 	
 	for(i=0;i<Nst;i++){
-		GCinit(&lat0,&lon0,&ST[i].stla,&ST[i].stlo,&GCarc);
+		ddistaz(ST[i].stla,ST[i].stlo,lat0,lon0,&GCarc,&baz);
 		ih = rint(dep/tdh);
 		ig = ih*rint(trx/tdx) + rint(GCarc/tdx);
 		tp_cal = TB[ig].ptime + (GCarc - TB[ig].gdist)*TB[ig].prayp + (dep - TB[ig].dep)*TB[ig].phslow + ST[i].elev/s_vp0;
@@ -1362,4 +1561,80 @@ void Accounttriggers_layer(double lat0,double lon0,double dep,double latref,doub
 		for(j=0;j<8;++j)pscounts[l][j] = 0.0;
 	}
 	free(torg);
+}
+
+
+/*
+ * Modified by M. Zhang
+c Subroutine to calculate the Great Circle Arc distance
+c    between two sets of geographic coordinates
+c
+c Given:  stalat => Latitude of first point (+N, -S) in degrees
+c         stalon => Longitude of first point (+E, -W) in degrees
+c         evtlat => Latitude of second point
+c         evtlon => Longitude of second point
+c
+c Returns:  delta => Great Circle Arc distance in degrees
+c           az    => Azimuth from pt. 1 to pt. 2 in degrees
+c           baz   => Back Azimuth from pt. 2 to pt. 1 in degrees
+c
+c If you are calculating station-epicenter pairs, pt. 1 is the station
+c
+c Equations take from Bullen, pages 154, 155
+c
+c T. Owens, September 19, 1991
+c           Sept. 25 -- fixed az and baz calculations
+c
+  P. Crotwell, Setember 27, 1994
+            Converted to c to fix annoying problem of fortran giving wrong
+               answers if the input doesn't contain a decimal point.
+*/
+void ddistaz(double stalat,double stalon,double evtlat,double evtlon,double *delta,double *baz){
+   //double stalat, stalon, evtlat, evtlon;
+   //double delta, az, baz;
+   double scolat, slon, ecolat, elon;
+   double a,b,c,d,e,aa,bb,cc,dd,ee,g,gg,h,hh,k,kk;
+   double rhs1,rhs2,sph,rad,del,daz,dbaz,pi,piby2;
+/*
+   stalat = atof(argv[1]);
+   stalon = atof(argv[2]);
+   evtlat = atof(argv[3]);
+   evtlon = atof(argv[4]);
+*/
+   pi=3.141592654;
+   piby2=pi/2.0;
+   rad=2.*pi/360.0;
+   sph=1.0/298.257;
+
+   scolat=piby2 - atan((1.-sph)*(1.-sph)*tan(stalat*rad));
+   ecolat=piby2 - atan((1.-sph)*(1.-sph)*tan(evtlat*rad));
+   slon=stalon*rad;
+   elon=evtlon*rad;
+   a=sin(scolat)*cos(slon);
+   b=sin(scolat)*sin(slon);
+   c=cos(scolat);
+   d=sin(slon);
+   e=-cos(slon);
+   g=-c*e;
+   h=c*d;
+   k=-sin(scolat);
+   aa=sin(ecolat)*cos(elon);
+   bb=sin(ecolat)*sin(elon);
+   cc=cos(ecolat);
+   dd=sin(elon);
+   ee=-cos(elon);
+   gg=-cc*ee;
+   hh=cc*dd;
+   kk=-sin(ecolat);
+   del=acos(a*aa + b*bb + c*cc);
+   *delta=del/rad; //delta
+   
+   rhs1=(aa-d)*(aa-d)+(bb-e)*(bb-e)+cc*cc - 2.;
+   rhs2=(aa-g)*(aa-g)+(bb-h)*(bb-h)+(cc-k)*(cc-k) - 2.;
+   dbaz=atan2(rhs1,rhs2);
+   if (dbaz<0.0) {
+      dbaz=dbaz+2*pi;
+   } 
+   *baz=dbaz/rad; //baz
+   if(fabs(*baz-360.) < .00001) *baz=0.0;
 }
