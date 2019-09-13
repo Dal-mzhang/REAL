@@ -39,4 +39,5 @@ plot(t_d_S(:,2),t_d_S(:,1),'r.');hold on;
 axis([0 100 0 30]);
 title('t-dist curve of S');
 xlabel('Hypocenter Distance (km)');
-print('-depsc2','t_dist','-r300');
+%print('-depsc2','t_dist','-r300');
+saveas(gcf,'t_dist.pdf');
