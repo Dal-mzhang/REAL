@@ -21,5 +21,6 @@ REAL (Rapid Earthquake Association and Location) associates arrivals of differen
 Miao Zhang, Dalhousie University, miao.zhang@dal.ca
 
 # Versions:
-REAL1.0 June  27, 2019
-REAL1.1 Sept. 13, 2019
+REAL1.0, June  27, 2019
+
+REAL1.1, Sept. 13, 2019
