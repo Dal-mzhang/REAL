@@ -50,7 +50,6 @@ with open("../Data/station.dat", "r") as f:
             tre.detrend('demean') 
             tre.detrend('linear') 
             tre.filter(type="bandpass",freqmin=0.2,freqmax=10.0,zerophase=True)
-            tre.integrate
             datatre = tre.data
         
 
@@ -58,7 +57,6 @@ with open("../Data/station.dat", "r") as f:
             trn.detrend('demean') 
             trn.detrend('linear') 
             trn.filter(type="bandpass",freqmin=0.2,freqmax=10.0,zerophase=True)
-            trn.integrate
             datatrn = trn.data
 
             # Output the triggered 
