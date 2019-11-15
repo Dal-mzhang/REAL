@@ -50,7 +50,7 @@ def main():
                 tre.filter(type="bandpass",freqmin=2.0,freqmax=15.0,zerophase=True)
                 trn.filter(type="bandpass",freqmin=2.0,freqmax=15.0,zerophase=True)
                 df = tre.stats.sampling_rate
-                tstart = tre.stats.starttime - UTCDateTime(2016, 10, day, 0, 0, 0)
+                tstart = tre.stats.starttime - UTCDateTime(year, mon, day, 0, 0, 0)
                 #print(tstart);
                 output = './'+date+net+'.'+sta+'.'+'S.txt'
 
