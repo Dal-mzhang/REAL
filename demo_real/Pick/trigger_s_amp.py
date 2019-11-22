@@ -38,10 +38,10 @@ def main():
                 stnwa = read(wave_n_wa)
             
                 tre = ste[0]
-                trn = ste[0]
+                trn = stn[0]
             
                 tre_wa = stewa[0]
-                trn_wa = stewa[0]
+                trn_wa = stnwa[0]
         
                 tre.detrend('demean') 
                 tre.detrend('linear') 
