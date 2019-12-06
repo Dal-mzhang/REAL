@@ -18,8 +18,8 @@ foreach $_(@par){
 	($lon,$lat,$net,$sta,$comp,$elev) = split(" ",$_);
 	if(length($sta)>4){$sta = substr($sta,1,4);} 
 	$vsn = "N";$vew = "E";
-	if($lat < 0.0){$vsn = "S";}
-	if($lon < 0.0){$vew = "W";}
+	if($lat < 0.0){$vsn = "S";$lat = -1*$lat;}
+	if($lon < 0.0){$vew = "W";$lon = -1*$lon;}
 	printf OT "%-4s%7.4f%1s %8.4f%s %4d %1d %3d %5.2f  %5.2f\n",$sta,$lat,$vsn,$lon,$vew,$p1,$p2,$p3,$v1,$v2;
 	$p3++;
 }
