@@ -29,7 +29,7 @@
  *
  *Revision history:
  *  June     2018       M. Zhang    Initial version in C 
- *  June     2019		M. Zhang	Release version 1.0
+ *  June     2019	M. Zhang    Release version 1.0
  *  Sept.    2019       M. Zhang    Release version 1.1
  *  Nov.     2019       M. Zhang    Release version 1.2
  ************************************************************************/
@@ -95,8 +95,8 @@ typedef struct clearups{
 	double lat;
 	double lon;
 	double dep;
-    double mag_median;
-    double mag_std;
+    	double mag_median;
+    	double mag_std;
 	int pcount;
 	int scount;
 	int pscount;
@@ -184,7 +184,7 @@ int main(int argc, char **argv){
 	char otime[50];
 	int igrid,ires,ielev,ig,ih,im,iremove,inoref;
 	SELECT *RELC;
-    CLEARUP *CLEAR;
+   	CLEARUP *CLEAR;
 	double **pamp0,**samp0,**pweight0,**sweight0,*mag;
 	double mag_median,mag_std,p_mag,s_mag;
 	int nyear,nmon,nday;
@@ -198,10 +198,10 @@ int main(int argc, char **argv){
 	rsel = 5; //rsel*STD
 	latref0 = -10000;
 	lonref0 = -10000;
-    s_vp0 = 1000000;
-    s_vs0 = 1000000;
-    GAPTH = 360; //station azimuth gap threshold (default: no constraint)
-    GCarc0 = 180; //only use picks within GCarc0 (in degree) (default: no constraint)
+    	s_vp0 = 1000000;
+    	s_vs0 = 1000000;
+    	GAPTH = 360; //station azimuth gap threshold (default: no constraint)
+    	GCarc0 = 180; //only use picks within GCarc0 (in degree) (default: no constraint)
 
 	for(i=1;!error && i<argc; i++){
 		if(argv[i][0] == '-'){
@@ -239,10 +239,10 @@ int main(int argc, char **argv){
         fprintf(stderr, "   -R: search ranges and grids around the station that recorded initiating pick in horizontal direction and depth,\n");
         fprintf(stderr, "       event interval, largest station gap, largest distance, reference location (deg/km/deg/km/sec[deg/deg/deg/deg])\n");
         fprintf(stderr, "   -V: average velocities and near-surface velocities of P and S waves, station elevation_or_not\n");
-		fprintf(stderr, "       (km/s|km/s|[km/s|km/s|int])\n");
+	fprintf(stderr, "       (km/s|km/s|[km/s|km/s|int])\n");
         fprintf(stderr, "   -S: thresholds: number of picks (P,S,P+S),effective number of grids,STD threshold, \n");
-		fprintf(stderr, "       S-P interval,nrt*length of time window,only keep picks with residuals < rsel*STD,\n");
-		fprintf(stderr,	"       resolution_or_not (int/int/int/int/double/double/double/[double/int])\n");
+	fprintf(stderr, "       S-P interval,nrt*length of time window,only keep picks with residuals < rsel*STD,\n");
+	fprintf(stderr,	"       resolution_or_not (int/int/int/int/double/double/double/[double/int])\n");
         fprintf(stderr, "   -G: range and grid settings in traveltime table (in horizontal and vertical) (deg/km/deg/km)\n");
         fprintf(stderr, "   station: station information; pickdir: directory of picks; ttime: [traveltime table]\n");
         exit(-1);
@@ -293,7 +293,7 @@ int main(int argc, char **argv){
 	for(i=0;i<Nst;i++){
 		sprintf(input,"%s/%s.%s.P.txt",dir,ST[i].net,ST[i].sta);
         if((fp=fopen(input,"r"))==NULL){
-            fprintf(stderr,"Can not open file in ReadFile %s\n", input);
+            	fprintf(stderr,"Can not open file in ReadFile %s\n", input);
         }else{
 			test = 0;
 			for (j = 0; j < Nps; j++){
@@ -305,7 +305,7 @@ int main(int argc, char **argv){
 
 		sprintf(input,"%s/%s.%s.S.txt",dir,ST[i].net,ST[i].sta);
         if((fp=fopen(input,"r"))==NULL){
-            fprintf(stderr,"Can not open file in ReadFile %s\n", input);
+            	fprintf(stderr,"Can not open file in ReadFile %s\n", input);
         }else{
 			test = 0;
 			for (j = 0; j < Nps; j++){
@@ -365,15 +365,15 @@ int main(int argc, char **argv){
 	stw = sqrt(2*(dx*111.19)*(dx*111.19)+dh*dh)/vs0;
 	if(tint < stw)tint=stw;
 	fprintf(stderr,"p-window= %.2f sec; s-window= %.2f sec; event-window= %.2f sec\n",nrt*ptw,nrt*stw,tint);
-    SortTriggers(TGP,TGS,ptrig,strig,Nst,Nps);
+    	SortTriggers(TGP,TGS,ptrig,strig,Nst,Nps);
 	//sort triggers
 	SortTriggers0(TGP,TGS,ptrig0,strig0,pamp0,samp0,pweight0,sweight0,Nst,Nps);
 	
 	nlat = (int)(2*rx/dx + 1);
-    nlon = (int)(2*rx/dx + 1);
-    ndep = (int)(rh/dh + 1);
+    	nlon = (int)(2*rx/dx + 1);
+    	ndep = (int)(rh/dh + 1);
 	nnn = nlat*nlon*ndep;
-    printf("Nlat= %d Nlon= %d Ndep= %d\n",nlat,nlon,ndep);
+    	printf("Nlat= %d Nlon= %d Ndep= %d\n",nlat,nlon,ndep);
 
 	pscounts = (double **)malloc(nnn*sizeof(double*));
 	for(k=0;k<nnn;k++){
@@ -390,7 +390,7 @@ int main(int argc, char **argv){
 	m = 0;
 	
 	if(latref0 < -999 && lonref0 < -999)inoref = 1;
-    Maxt0 = Find_max(ptrig,Nst,Nps);
+    	Maxt0 = Find_max(ptrig,Nst,Nps);
 	//search each initiating P pick
 	while(Find_min(ptrig,Nst,Nps) < Maxt0){
 		//jump:
@@ -401,7 +401,7 @@ int main(int argc, char **argv){
 		lonref = ST[m].stlo;
 		latref = ST[m].stla;
 		elevref = ST[m].elev;
-        if(inoref > 0){
+       		if(inoref > 0){
 	        lonref0 = ST[m].stlo;
 		    latref0 = ST[m].stla;
         }
@@ -476,9 +476,9 @@ int main(int argc, char **argv){
 		//sort pscounts
 		Sortpscounts(pscounts,nnn);
         
-		//if(ppp >= nppp && pscounts[nnn-1][7] >= nps0  && pscounts[nnn-1][6] <= std0 && pscounts[nnn-1][8] <= GAPTH){
+		if(ppp >= nppp && pscounts[nnn-1][7] >= nps0  && pscounts[nnn-1][6] <= std0 && pscounts[nnn-1][8] <= GAPTH){
         	//remove events out of the station region
-		if(ppp >= nppp && pscounts[nnn-1][7] >= nps0  && pscounts[nnn-1][6] <= std0 && pscounts[nnn-1][8] <= GAPTH && pscounts[nnn-1][0] >= stlamin && pscounts[nnn-1][0] <= stlamax && pscounts[nnn-1][1] >= stlomin && pscounts[nnn-1][1] <= stlomax){
+		//if(ppp >= nppp && pscounts[nnn-1][7] >= nps0  && pscounts[nnn-1][6] <= std0 && pscounts[nnn-1][8] <= GAPTH && pscounts[nnn-1][0] >= stlamin && pscounts[nnn-1][0] <= stlamax && pscounts[nnn-1][1] >= stlomin && pscounts[nnn-1][1] <= stlomax){
        	 	//remove events out of the station region and at the depth of h == rh (insufficient depth search)
         	//if(ppp >= nppp && pscounts[nnn-1][7] >= nps0  && pscounts[nnn-1][6] <= std0 && pscounts[nnn-1][8] <= GAPTH && pscounts[nnn-1][0] >= stlamin && pscounts[nnn-1][0] <= stlamax && pscounts[nnn-1][1] >= stlomin && pscounts[nnn-1][1] <= stlomax && pscounts[nnn-1][2] < rh){
 			told = pscounts[nnn-1][3];
@@ -499,10 +499,10 @@ int main(int argc, char **argv){
 			RELC[mmm].nofs1 = pscounts[nnn-1][5];
 			RELC[mmm].ntotal1 = pscounts[nnn-1][7];
 
-             fprintf(stderr,"%5d %25s %12.3lf %8.4lf %12.4lf %12.4lf %12.4lf %4d %4d %4d %8.2f\n",mmm+1,otime,pscounts[nnn-1][3],pscounts[nnn-1][6],pscounts[nnn-1][0],pscounts[nnn-1][1],pscounts[nnn-1][2],(int)(pscounts[nnn-1][4]),(int)(pscounts[nnn-1][5]),(int)(pscounts[nnn-1][7]),pscounts[nnn-1][8]);
+             		fprintf(stderr,"%5d %25s %12.3lf %8.4lf %12.4lf %12.4lf %12.4lf %4d %4d %4d %8.2f\n",mmm+1,otime,pscounts[nnn-1][3],pscounts[nnn-1][6],pscounts[nnn-1][0],pscounts[nnn-1][1],pscounts[nnn-1][2],(int)(pscounts[nnn-1][4]),(int)(pscounts[nnn-1][5]),(int)(pscounts[nnn-1][7]),pscounts[nnn-1][8]);
 			mmm++;
 			
-            iremove = 0;
+            		iremove = 0;
 			//Ispeed is recommended to save time (use a strict threshold)	
 			//Otherwise, one event would be associated and located by many initiating P picks. That's huge!
 			if(ispeed > 1.0e-5){
@@ -562,7 +562,7 @@ int main(int argc, char **argv){
 			dep  = RELC[i].dep1;
 				
 			ddistaz(ST[k].stla,ST[k].stlo,lat0,lon0,&GCarc,&baz);
-            rdist = sqrt((GCarc*111.19)*(GCarc*111.19) + dep*dep);
+            		rdist = sqrt((GCarc*111.19)*(GCarc*111.19) + dep*dep);
 			if(igrid == 0){
 				tp_cal = rdist/vp0 + ST[k].elev/s_vp0;
 				ts_cal = rdist/vs0 + ST[k].elev/s_vs0;
@@ -603,7 +603,7 @@ int main(int argc, char **argv){
 					p_mag = log(pamp0[k][j])/log(10) + 1.110*log(rdist/100)/log(10) + 0.00189*(rdist-100)+3.0;	
 					CLEAR[i].pk[ps].mag = p_mag;
 
-                    pcount++; ps++;
+                    	pcount++; ps++;
 					ptemp = ptrig0[k][j];
 					break;
 				}	
@@ -698,7 +698,7 @@ int main(int argc, char **argv){
 	free(ptrig0);free(strig0);
 	free(pamp0);free(samp0);
 	free(ST);free(RELC);
-    free(CLEAR);
+    	free(CLEAR);
 	free(TB);free(mag);
 	return 0;
 }
@@ -707,7 +707,7 @@ int main(int argc, char **argv){
 //2. If one pick is associated with multiple events (although the possibility is very low if you have suitable parameter settings),
 //   keep the pick with smallest individual traveltime residual and remove others.
 int ReselectClear(CLEARUP *CLEAR,int NN){
-	int i,j,k,l,m,idx;
+    int i,j,k,l,m,idx;
     double *mag0, *res0, res_median, gap0, gap;
     int pcount, scount;
     char net[5],sta[8],phase[5];
@@ -1292,45 +1292,45 @@ void SortTriggers0(TRIG **tgp,TRIG **tgs,double **array1,double **array2,double 
 		array2[i][0] = tgs[i][0].trig;
 		pamp[i][0] = tgp[i][0].amp;
 		samp[i][0] = tgs[i][0].amp;
-        pweight[i][0] = tgp[i][0].weight;
-        sweight[i][0] = tgs[i][0].weight;
+        	pweight[i][0] = tgp[i][0].weight;
+       		sweight[i][0] = tgs[i][0].weight;
 		for(j=1;j<n;j++){
 			if(tgp[i][j].trig - tgp[i][j-1].trig < nrt*ptw){
 			   if(tgp[i][j].weight > tgp[i][j-1].weight){
 					array1[i][j] = tgp[i][j].trig;
 					pamp[i][j] = tgp[i][j].amp;
-                    pweight[i][j] = tgp[i][j].weight;
+                    			pweight[i][j] = tgp[i][j].weight;
 					array1[i][j-1] = 1.0e8;
 					pamp[i][j-1] = 0.0;
-                    pweight[i][j-1] = 0.0;
+                    			pweight[i][j-1] = 0.0;
 			   }else{
 					array1[i][j] = 1.0e8;
 					pamp[i][j] = 0.0;
-                    pweight[i][j] = 0.0;
+                    			pweight[i][j] = 0.0;
 			   }
 			}else{
 				array1[i][j] = tgp[i][j].trig;
 				pamp[i][j] = tgp[i][j].amp;
-                pweight[i][j] = tgp[i][j].weight;
+                		pweight[i][j] = tgp[i][j].weight;
 			}
 			
 			if(tgs[i][j].trig - tgs[i][j-1].trig < nrt*stw){
 			   if(tgs[i][j].weight > tgs[i][j-1].weight){
 					array2[i][j] = tgs[i][j].trig;
 					samp[i][j] = tgs[i][j].amp;
-                    sweight[i][j] = tgs[i][j].weight;
+                    			sweight[i][j] = tgs[i][j].weight;
 					array2[i][j-1] = 1.0e8;
 					samp[i][j-1] = 0.0;
-                    sweight[i][j-1] = 0.0;
+                    			sweight[i][j-1] = 0.0;
 			   }else{
 					array2[i][j] = 1.0e8;
 					samp[i][j] = 0.0;
-                    sweight[i][j] = 0.0;
+                    			sweight[i][j] = 0.0;
 			   }
 			}else{
 				array2[i][j] = tgs[i][j].trig;
 				samp[i][j] = tgs[i][j].amp;
-                sweight[i][j] = tgs[i][j].weight;
+                		sweight[i][j] = tgs[i][j].weight;
 			}
 		}
 	}
@@ -1423,7 +1423,7 @@ void Accounttriggers_homo(double lat0,double lon0,double dep,double latref,doubl
 	extern double **pscounts;
 	double *torg,*stagap,gap0,gaptemp,gap;
 	extern double dtps;
-    extern double GCarc0,std0;
+    	extern double GCarc0,std0;
 	
 
 	pcount = 0;scount = 0;ps = 0;
@@ -1459,7 +1459,7 @@ void Accounttriggers_homo(double lat0,double lon0,double dep,double latref,doubl
 		for(j=np0_start[i];j<np0_end[i];j++){
 			if(ptrig0[i][j] > tp_pre_b && ptrig0[i][j] < tp_pre_e && GCarc < GCarc0){
 				torg[ps] = ptrig0[i][j] - tp_cal;
-                stagap[ps] = baz;
+                		stagap[ps] = baz;
 				pcount = pcount + 1; ps = ps + 1;
 				ptemp = ptrig0[i][j];
 				break;
@@ -1470,7 +1470,7 @@ void Accounttriggers_homo(double lat0,double lon0,double dep,double latref,doubl
 		for(j=ns0_start[i];j<ns0_end[i];j++){
 			if((ts_pre - tp_pre) > dtps && fabs(ptemp - strig0[i][j]) > dtps && strig0[i][j] > ts_pre_b && strig0[i][j] < ts_pre_e && GCarc < GCarc0){
 				torg[ps] = strig0[i][j] - ts_cal;
-                stagap[ps] = baz;
+                		stagap[ps] = baz;
 				scount = scount + 1; ps = ps + 1;
 				break;
 			}
@@ -1500,7 +1500,7 @@ void Accounttriggers_homo(double lat0,double lon0,double dep,double latref,doubl
 		
         //median = CalculateMean(torg,ps);
 		median = CalculateMedian(torg,ps);
-        median = (int)(median*1000.0+0.5)/1000.0;
+        	median = (int)(median*1000.0+0.5)/1000.0;
 		std = CalculateStd(torg,median,ps);
 		pscounts[l][0] = lat0;
 		pscounts[l][1] = lon0;
@@ -1541,7 +1541,7 @@ void Accounttriggers_layer(double lat0,double lon0,double dep,double latref,doub
 	extern STATION *ST;
 	extern double **pscounts;
 	extern double trx,tdx,tdh,dtps;
-    extern double GCarc0,std0;
+    	extern double GCarc0,std0;
 	double *torg,*stagap,gap0,gaptemp,gap;
 	
 	pcount = 0;scount = 0;ps = 0;
