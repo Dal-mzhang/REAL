@@ -476,11 +476,11 @@ int main(int argc, char **argv){
 		//sort pscounts
 		Sortpscounts(pscounts,nnn);
         
-		//if(ppp >= nppp && pscounts[nnn-1][7] >= nps0  && pscounts[nnn-1][6] <= std0 && psconts[nnn-1][8] <= GAPTH){
-        //remove events out of the station region
+		//if(ppp >= nppp && pscounts[nnn-1][7] >= nps0  && pscounts[nnn-1][6] <= std0 && pscounts[nnn-1][8] <= GAPTH){
+        	//remove events out of the station region
 		if(ppp >= nppp && pscounts[nnn-1][7] >= nps0  && pscounts[nnn-1][6] <= std0 && pscounts[nnn-1][8] <= GAPTH && pscounts[nnn-1][0] >= stlamin && pscounts[nnn-1][0] <= stlamax && pscounts[nnn-1][1] >= stlomin && pscounts[nnn-1][1] <= stlomax){
-        //remove events out of the station region and at the depth of h == rh (insufficient depth search)
-        //if(ppp >= nppp && pscounts[nnn-1][7] >= nps0  && pscounts[nnn-1][6] <= std0 && psconts[nnn-1][8] <= GAPTH && pscounts[nnn-1][0] >= stlamin && pscounts[nnn-1][0] <= stlamax && pscounts[nnn-1][1] >= stlomin && pscounts[nnn-1][1] <= stlomax && pscounts[nnn-1][2] < rh){
+       	 	//remove events out of the station region and at the depth of h == rh (insufficient depth search)
+        	//if(ppp >= nppp && pscounts[nnn-1][7] >= nps0  && pscounts[nnn-1][6] <= std0 && pscounts[nnn-1][8] <= GAPTH && pscounts[nnn-1][0] >= stlamin && pscounts[nnn-1][0] <= stlamax && pscounts[nnn-1][1] >= stlomin && pscounts[nnn-1][1] <= stlomax && pscounts[nnn-1][2] < rh){
 			told = pscounts[nnn-1][3];
 			ttd = (int)(pscounts[nnn-1][3]/86400);
 			tth = (int)((pscounts[nnn-1][3] - ttd*86400)/3600);
