@@ -389,6 +389,7 @@ int main(int argc, char **argv){
 	mmm = 0;
 	m = 0;
 	
+	inoref = -1;
 	if(latref0 < -999 && lonref0 < -999)inoref = 1;
     	Maxt0 = Find_max(ptrig,Nst,Nps);
 	//search each initiating P pick
@@ -402,9 +403,9 @@ int main(int argc, char **argv){
 		latref = ST[m].stla;
 		elevref = ST[m].elev;
        		if(inoref > 0){
-	        lonref0 = ST[m].stlo;
+	            lonref0 = ST[m].stlo;
 		    latref0 = ST[m].stla;
-        }
+        	}
         
 		//Make sure you know what you are doing!
 		//if(fabs(tpmin0 - told) < tint/2){
