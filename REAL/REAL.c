@@ -1622,7 +1622,7 @@ void Accounttriggers_layer(double lat0,double lon0,double dep,double latref,doub
         
         //median = CalculateMean(torg,ps);
 		median = CalculateMedian(torg,ps);
-        median = (int)(median*1000.0+0.5)/1000.0;
+        	//median = (int)(median*1000.0+0.5)/1000.0;
 		std = CalculateStd(torg,median,ps);
 		pscounts[l][0] = lat0;
 		pscounts[l][1] = lon0;
