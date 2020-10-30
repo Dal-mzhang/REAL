@@ -300,8 +300,8 @@ int main(int argc, char **argv){
 				if(fscanf(fp, "%lf %lf %lf",&TGP[i][j].trig,&TGP[i][j].weight,&TGP[i][j].amp)==EOF)test=1;
 				if(test==1)break;
 			}
+		  	fclose(fp);
 		}
-        fclose(fp);
 
 		sprintf(input,"%s/%s.%s.S.txt",dir,ST[i].net,ST[i].sta);
         if((fp=fopen(input,"r"))==NULL){
@@ -312,8 +312,8 @@ int main(int argc, char **argv){
 				if(fscanf(fp, "%lf %lf %lf",&TGS[i][j].trig,&TGS[i][j].weight,&TGS[i][j].amp)==EOF)test=1;
 				if(test==1)break;
 			}
+		  	fclose(fp);
 		}
-        fclose(fp);
 	}
 
 	/* read travel time table */
