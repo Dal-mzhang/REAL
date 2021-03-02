@@ -4289,6 +4289,8 @@ c
       real v1(inltot),vsq1(inltot)
       real dtdr_s(3),dtdv_s(inltot),ttt_s
       save nITTdone, ifirst
+      real xxx(1),yyy(1),zzz(1),velvel(1,1,1) !added by M. Zhang in Nov. 2020
+      !to solve a compiling issue caused by gfortran upgrading.
 c
 c     reset statistics-parameter if iteration is new
 c     or if NITT is the same but all rays are shot again (e.g. after
@@ -4388,7 +4390,12 @@ c
 c
 c     do the ray-tracing :
 c
-      call RAYPATH(1,1,1,1.,1.,1.,1.,nl,thk,h,v,vsq,
+      xxx(1)=1.0
+      yyy(1)=1.0
+      zzz(1)=1.0
+      velvel(1,1,1)=1.0
+c      call RAYPATH(1,1,1,1.,1.,1.,1.,nl,thk,h,v,vsq, ! old one
+      call RAYPATH(1,1,1,xxx,yyy,zzz,velvel,nl,thk,h,v,vsq,
      &            e(2,i),e(3,i),e(4,i),x(k1,1),x(k1,2),x(k1,3),
      &            rp,nrp,nrtn,jl,tkj,1,ttt,MLL,ster,direr,refrer,refler,
      &            DTDDrefl,DTDHrefl)
