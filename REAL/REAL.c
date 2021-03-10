@@ -685,6 +685,8 @@ fprintf(stderr,"before second selection: %d\n after second selection: %d\n",nsel
 
 for(i=0;i<mmm;i++){
     if(CLEAR[i].pscount > 3){
+	if(CLEAR[i].lon > 180){CLEAR[i].lon = CLEAR[i].lon - 360;}
+	if(CLEAR[i].lon < -180){CLEAR[i].lon = CLEAR[i].lon + 360;} // suggested by Yukuan Chen
         fprintf(fp1,"%5d %25s %12.3lf %8.4lf %12.4lf %12.4lf %12.4lf %8.3lf %8.3lf %4d %4d %4d %8.2lf\n",i+1,CLEAR[i].otime,CLEAR[i].atime,CLEAR[i].std,CLEAR[i].lat,CLEAR[i].lon,CLEAR[i].dep,CLEAR[i].mag_median,CLEAR[i].mag_std,CLEAR[i].pcount,CLEAR[i].scount,CLEAR[i].pscount,CLEAR[i].gap);
 fprintf(fp2,"%5d %25s %12.3lf %8.4lf %12.4lf %12.4lf %12.4lf %8.3lf %8.3lf %4d %4d %4d %8.2lf\n",i+1,CLEAR[i].otime,CLEAR[i].atime,CLEAR[i].std,CLEAR[i].lat,CLEAR[i].lon,CLEAR[i].dep,CLEAR[i].mag_median,CLEAR[i].mag_std,CLEAR[i].pcount,CLEAR[i].scount,CLEAR[i].pscount,CLEAR[i].gap);
         for(j=0;j<CLEAR[i].pscount;j++){
