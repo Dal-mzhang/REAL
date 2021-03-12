@@ -331,8 +331,8 @@ int main(int argc, char **argv){
 	Nps = DetermineNg(TGP,TGS,Nst,Nps);
 	NNps = Nps;
     
-    dx2 = dx*cos(latcenter*3.1415926/180.0);
-    rx2 = rx*cos(latcenter*3.1415926/180.0);
+    dx2 = dx/cos(latcenter*3.1415926/180.0);
+    rx2 = rx/cos(latcenter*3.1415926/180.0);
     dx1 = dx;
     rx1 = rx;
     fprintf(stderr,"Actual     : Nst %-5d Nps %-5d Ntb %-5d\n",Nst,Nps-1,Ntb);
@@ -371,8 +371,9 @@ int main(int argc, char **argv){
     CLEAR = (CLEARUP *)malloc(sizeof(CLEARUP)*Nst*Nps);
     for(i=0;i<Nst*Nps;i++)CLEAR[i].pk = (PICK *)malloc(sizeof(PICK)*Nst*2); 
 	/* determine traveltime across one grid*/
-    ptw = sqrt((dx1*111.19)*(dx1*111.19)+dx2*111.19*dx2*111.19*dh*dh)/vp0;
-    stw = sqrt((dx1*111.19)*(dx1*111.19)+dx2*111.19*dx2*111.19*+dh*dh)/vs0;
+	//lon grid (dx2) has been corrected, consistent with lat grid (dx1)
+    ptw = sqrt((dx1*111.19)*(dx1*111.19)+(dx1*111.19)*(dx1*111.19)+dh*dh)/vp0;
+    stw = sqrt((dx1*111.19)*(dx1*111.19)+(dx1*111.19)*(dx1*111.19)+dh*dh)/vs0;
 
 	if(tint < stw)tint=stw;
 	fprintf(stderr,"p-window= %.2f sec; s-window= %.2f sec; event-window= %.2f sec\n",nrt*ptw,nrt*stw,tint);
