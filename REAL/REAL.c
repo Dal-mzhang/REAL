@@ -682,19 +682,22 @@ CLEAR[i].gap = -100; //will update in ReselectClear
 
 /*Reselect to remove unstable events with large gap and exclude one pick is associated more than once*/
 mmm = ReselectClear(CLEAR,nselect);
-fprintf(stderr,"before second selection: %d\n after second selection: %d\n",nselect,mmm);
 
+k=0;
 for(i=0;i<mmm;i++){
     if(CLEAR[i].pscount > 3){
-	if(CLEAR[i].lon > 180){CLEAR[i].lon = CLEAR[i].lon - 360;}
-	if(CLEAR[i].lon < -180){CLEAR[i].lon = CLEAR[i].lon + 360;} // suggested by Yukuan Chen
-        fprintf(fp1,"%5d %25s %12.3lf %8.4lf %12.4lf %12.4lf %12.4lf %8.3lf %8.3lf %4d %4d %4d %8.2lf\n",i+1,CLEAR[i].otime,CLEAR[i].atime,CLEAR[i].std,CLEAR[i].lat,CLEAR[i].lon,CLEAR[i].dep,CLEAR[i].mag_median,CLEAR[i].mag_std,CLEAR[i].pcount,CLEAR[i].scount,CLEAR[i].pscount,CLEAR[i].gap);
-fprintf(fp2,"%5d %25s %12.3lf %8.4lf %12.4lf %12.4lf %12.4lf %8.3lf %8.3lf %4d %4d %4d %8.2lf\n",i+1,CLEAR[i].otime,CLEAR[i].atime,CLEAR[i].std,CLEAR[i].lat,CLEAR[i].lon,CLEAR[i].dep,CLEAR[i].mag_median,CLEAR[i].mag_std,CLEAR[i].pcount,CLEAR[i].scount,CLEAR[i].pscount,CLEAR[i].gap);
+        k++;
+	    if(CLEAR[i].lon > 180){CLEAR[i].lon = CLEAR[i].lon - 360;}
+	    if(CLEAR[i].lon < -180){CLEAR[i].lon = CLEAR[i].lon + 360;} // suggested by Yukuan Chen
+        fprintf(fp1,"%5d %25s %12.3lf %8.4lf %12.4lf %12.4lf %12.4lf %8.3lf %8.3lf %4d %4d %4d %8.2lf\n",k,CLEAR[i].otime,CLEAR[i].atime,CLEAR[i].std,CLEAR[i].lat,CLEAR[i].lon,CLEAR[i].dep,CLEAR[i].mag_median,CLEAR[i].mag_std,CLEAR[i].pcount,CLEAR[i].scount,CLEAR[i].pscount,CLEAR[i].gap);
+fprintf(fp2,"%5d %25s %12.3lf %8.4lf %12.4lf %12.4lf %12.4lf %8.3lf %8.3lf %4d %4d %4d %8.2lf\n",k,CLEAR[i].otime,CLEAR[i].atime,CLEAR[i].std,CLEAR[i].lat,CLEAR[i].lon,CLEAR[i].dep,CLEAR[i].mag_median,CLEAR[i].mag_std,CLEAR[i].pcount,CLEAR[i].scount,CLEAR[i].pscount,CLEAR[i].gap);
         for(j=0;j<CLEAR[i].pscount;j++){
             fprintf(fp2,"%5s %8s %5s %12.4lf %12.4lf %12.4e %12.4lf %12.4lf %12.4lf\n",CLEAR[i].pk[j].net,CLEAR[i].pk[j].sta,CLEAR[i].pk[j].phase,CLEAR[i].pk[j].abs_pk,CLEAR[i].pk[j].pk,CLEAR[i].pk[j].amp,CLEAR[i].pk[j].res,CLEAR[i].pk[j].weig,CLEAR[i].pk[j].baz);
         }
     }
 }
+
+fprintf(stderr,"before second selection: %d\n after second selection: %d\n",mmm,k);
 
 fclose(fp1);
 fclose(fp2);
@@ -722,7 +725,7 @@ return 0;
 
 //1. remove unstable events with large station gap
 //2. If one pick is associated with multiple events (although the possibility is very low if you have suitable parameter settings),
-//   keep the pick with smallest individual traveltime residual and remove others.
+//   keep the pick with smallest individual traveltime residual (old version) or keep the pick with the event that has more associated picks (prefered now)
 int ReselectClear(CLEARUP *CLEAR,int NN){
 int i,j,k,l,m,idx;
 double *mag0, *res0, res_median, gap0, gap;
@@ -772,27 +775,6 @@ for(j=0;j<CLEAR[i].pscount;j++){
 }
 }
 
-//select based on station azimuth gap 
-for(i=0;i<NN;i++){
-gap0 = -100;
-for(j=0;j<CLEAR[i].pscount-1;j++){
-    k = j+1;
-    gap =  CLEAR[i].pk[k].baz - CLEAR[i].pk[j].baz;
-    if(gap > gap0)gap0 = gap;
- }
- //first and last azimuth
- k = CLEAR[i].pscount-1;
- gap =  360 + CLEAR[i].pk[0].baz - CLEAR[i].pk[k].baz;
- if(gap > gap0){gap0 = gap;} 
- CLEAR[i].gap = gap0;
-}
-
-for(i=0;i<NN;i++){
- if(CLEAR[i].gap > GAPTH){
-          NN = NN-1;
-          for(idx = i; idx < NN; idx++)CLEAR[idx] = CLEAR[idx+1];
- }
-}
 
 //exclude the case that one pick is associated more than once
 for(i=0;i<NN;i++){
@@ -839,9 +821,26 @@ free(mag0);
 free(res0);
 }
 
+
+//select based on station azimuth gap 
+for(i=0;i<NN;i++){
+gap0 = -100;
+for(j=0;j<CLEAR[i].pscount-1;j++){
+    k = j+1;
+    gap =  CLEAR[i].pk[k].baz - CLEAR[i].pk[j].baz;
+    if(gap > gap0)gap0 = gap;
+ }
+ //first and last azimuth
+ k = CLEAR[i].pscount-1;
+ gap =  360 + CLEAR[i].pk[0].baz - CLEAR[i].pk[k].baz;
+ if(gap > gap0){gap0 = gap;} 
+ CLEAR[i].gap = gap0;
+}
+
+
 for(i=0;i<NN;i++){
     //select again
-    if(CLEAR[i].pcount < np0 || CLEAR[i].scount < ns0 || CLEAR[i].pscount < nps0 || CLEAR[i].pscount < 3){
+    if(CLEAR[i].pcount < np0 || CLEAR[i].scount < ns0 || CLEAR[i].pscount < nps0 || CLEAR[i].pscount < 3 || CLEAR[i].std > std0 || CLEAR[i].gap > GAPTH){
         CLEAR[i].pscount = 0;
     }
 }
@@ -1741,3 +1740,4 @@ if (dbaz<0.0) {
    *baz=dbaz/rad; //baz
    if(fabs(*baz-360.) < .00001) *baz=0.0;
 }
+
