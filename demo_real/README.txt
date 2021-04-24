@@ -33,7 +33,7 @@ t_dist.m (matlab) #roughly estimate association result from travel time vs. dist
 cd VELEST
 mergetogether_phase.pl #collect all phase inforamtion and initial locations determined by REAL
 perl converformat.pl #convert format (see velest manual)
-velest (type the command, you may change velest.cmn file in your case)
+velest (type the command, remember to change neqs (number of events in x.cat file), you may modify parameters in velest.cmn file in your case)
 perl convertoutput.pl #convert location format. Further select events based on station gap and residual 
 (some false detections may occur around or close to the boundary of the study area, remove events with large station gaps!!)
 plot_3dscatter.m (matlab) #plot location distribution in 3-D
