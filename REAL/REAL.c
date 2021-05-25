@@ -626,8 +626,9 @@ int main(int argc, char **argv) {
           }
 
           tp_pre = pscounts[nnn - 1][3] + tp_cal;
-          tp_pre_b = tp_pre - nrt * ptw / 2.0;
-          tp_pre_e = tp_pre + nrt * ptw / 2.0;
+          // consider the origin time uncertainty, i.e., half std
+          tp_pre_b = tp_pre - nrt * ptw / 2.0 - pscounts[nnn - 1][6] / 2.0;
+          tp_pre_e = tp_pre + nrt * ptw / 2.0 + pscounts[nnn - 1][6] / 2.0;
 
           if (tp_pre_b < 0.0)
             tp_pre_b = 0.0;
