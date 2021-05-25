@@ -14,5 +14,3 @@ system("time REAL -D$D -R$R -S$S -V$V $station $dir");
 print"REAL -D$D -R$R -S$S -V$V $station $dir\n";
 
 #Note that no traveltime table and -G 
-#A few of picks are lost (i.e., < 120) because we only keep the most reliable pick within a time window.
-#For real case, REAL will select picks based on their weighting factors
