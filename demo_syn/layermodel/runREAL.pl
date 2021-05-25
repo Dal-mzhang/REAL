@@ -13,6 +13,3 @@ $ttime = "../tt_db/ttdb.txt";
 
 system("time REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime");
 print"REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime\n";
-
-#A few of picks are lost (i.e., < 120) because we only keep the most reliable pick within a time window.
-#For real case, REAL will select picks based on their weighting factors
