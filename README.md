@@ -25,4 +25,4 @@ Miao Zhang, Dalhousie University, miao.zhang@dal.ca
 # Versions:
 REAL1.0, June  27, 2019
 
-see following changes in the tutorial
+The codes are improvded over time, see changes in the tutorial.
