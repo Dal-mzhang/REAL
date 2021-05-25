@@ -35,6 +35,7 @@ t_dist.m (matlab) #roughly estimate association result from travel time vs. dist
 cd VELEST
 mergetogether_phase.pl #collect all phase inforamtion and initial locations determined by REAL
 perl converformat.pl #convert format (see velest manual)
+(please prepare your own velocity model x.mod following the instruction in velest manual)
 velest (type the command to run velest, you may need to change parameters in velest.cmn file in your case such as reference point lat and lon)
 (note that the reference lontitude "olon" is reversed, e.g., 13.25E should be -13.25 here, see velest manual)
 (there two options in velest: 1) "isingle" = 1, you will update location alone. recommend ittmax=99 (a large number) and invertratio=0; It is fine if you see the code stops with errors in the end; 2) "isingle" = 0, you will update location, velocity, and station correction. recommend ittmax=9 and invertratio=3. remember to have consistent "neqs" with the number of events in this case, here see demo velest.cmn_0, move velest.cmn_0 to velest.cmn before you run the code)
