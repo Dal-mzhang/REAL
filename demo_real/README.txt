@@ -33,7 +33,7 @@ t_dist.m (matlab) #roughly estimate association result from travel time vs. dist
 
 4. refine earthquake locations using VELEST
 cd VELEST
-mergetogether_phase.pl #collect all phase inforamtion and initial locations determined by REAL
+perl mergetogether_phase.pl #collect all phase inforamtion and initial locations determined by REAL
 perl converformat.pl #convert format (see velest manual)
 (please prepare your own velocity model x.mod following the instruction in velest manual)
 velest (type the command to run velest, you may need to change parameters in velest.cmn file in your case such as reference point lat and lon)
