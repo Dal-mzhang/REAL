@@ -10,7 +10,7 @@ c     IN THIS SECTION YOU CAN CHANGE THE ARRAY-SIZES:
 c
       integer ieq,inshot,itotmodels,inltot,ist,
      &        maxobsperevent 
-      parameter(ieq=658)      ! number of earthquakes (Simultaneous mode)
+      parameter(ieq=5000)      ! number of earthquakes (Simultaneous mode)
 c      parameter(ieq=1)        ! number of earthquakes (single event mode ONLY)
       parameter(inshot=50,    ! max. number of shots (for simultaneous mode)
      &          itotmodels=2, ! max. number of velocity models
