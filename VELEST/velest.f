@@ -3515,13 +3515,14 @@ c
 c
       character*80 cline
       integer iyr,imo,iday,ihr,imin
-      integer j,j1
+      integer j,j1,IOstatus
 c
   1   eventtype='L'
       nobs=-1
-c
-   2  read(iunit,'(a)',end=999) cline
+c  ISOSTAT was added by M. Zhang to solve the warning issue (end of the file)
+   2  read(iunit,'(a)',end=999,IOSTAT=IOstatus) cline
       if(cline.eq.' ') goto 2
+      if(IOstatus > 0) stop
 c
       read(cline,'(3i2,1x,2i2,1x,f5.2,1x,f7.4,a1,1x,f8.4,a1,1x,f7.2,
      1      2x,f5.2)',
