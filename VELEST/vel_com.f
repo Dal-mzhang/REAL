@@ -97,7 +97,7 @@ cccc      character*1 cns,cew
       real tctime
       common/EXTRA/ tctime(ist,ieq)
 c89      character*4 smn,stn,blank,blank0
-      character*4 smn,stn,blank,blank0
+      character*6 smn,stn,blank,blank0
 c89      data blank,blank0 /'    ','0   '/
       common/CHARc/ smn(ist,ieq),stn(ist),blank,blank0
 c
