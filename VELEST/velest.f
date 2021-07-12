@@ -2,6 +2,12 @@
 c   original velest could be downloaded at http://www.seg.ethz.ch/software/velest.html
 c   I met some issues when I complied it on MAC. Here I made some changes to fix them.
 c   Miao Zhang (miao.zhang@dal.ca)
+c   Main changes by Miao Zhang:
+c   1. changed some minor format issue so that it can be complied.
+c   2. changed the station 4 char to  6 char
+c   3. change the output velocity format (isingle=0),now you can
+c      directly use it as input velocity
+c   4. fixed a bug (in previous version,the last pick always missing) 
 c   
       program velest
 c  version 3.3  E.Kissling, Institute of Geophysics, ETH Zurich
@@ -1407,8 +1413,8 @@ cek      read(10,*) (nplay(j),j=1,nmod)
      &                   ' marked with a : ',reflch
               write(16,*)'Only   m   or   M   are allowed!'
               write(16,*)'Reflected phases will be ignored (wrong mark)'
-              write(6,*)'Reflected phases will be ignored (wrong mark)'
-              write(6,*)
+c              write(6,*)'Reflected phases will be ignored (wrong mark)'
+c              write(6,*)
             endif
          endif
       endif
@@ -1566,7 +1572,7 @@ c
          write(16,27) nsta,stn(nsta),xla(nsta),cns,xlo(nsta),cew,
      &                ielev(nsta),dx,dy,dz,
      &                ptcor(nsta),stcor(nsta),mode,icc
-27       format(1x,i3,1x,a4,f7.4,a1,f8.4,a1,1x,i5,3f7.2,1x,2f6.2,2i4)
+27       format(1x,i3,1x,a6,f7.4,a1,f8.4,a1,1x,i5,3f7.2,1x,2f6.2,2i4)
          if(cns.eq.'S') xla(nsta)=-xla(nsta)
          if(cew.eq.'E') xlo(nsta)=-xlo(nsta)
       endif
@@ -1684,7 +1690,7 @@ c
       character*1 sc,ss,cphase(maxobsperevent)
       character*1 rmk1(maxobsperevent), rmk2(maxobsperevent),
      &            eventtype, cns,cew
-      character*4 sta(maxobsperevent)
+      character*6 sta(maxobsperevent)
       integer ipwt(maxobsperevent)
       real sec(maxobsperevent)
 c
@@ -1815,7 +1821,7 @@ c
                   endif
                endif
             enddo
-cc          write(16,'('' first station is '',a4)') sta(jjmin)
+cc          write(16,'('' first station is '',a6)') sta(jjmin)
             jjmin1=0
             do jj=1,nsta
                if(sta(jjmin).eq.stn(jj))then
@@ -1899,7 +1905,7 @@ c     do NOT use any phases marked with 'm' or 'M' !
                   write(6,*)'what phase is this ?  ',cphase(j),' ???'
                   write(6,*)
                   if(isingle.gt.0)then
-                     write(2,'('' DELETED: '',a4,
+                     write(2,'('' DELETED: '',a6,
      &                      '' unknown phase is: '',a1)')
      &                      sta(j),cphase(j)
                      goto 15
@@ -1931,16 +1937,16 @@ c
       if(.not.single_turbo)then
          if(isingle.eq.0) write(16,*)'WARNING:     Event # ',i
          if(isingle.gt.0) write(16,*)'WARNING:     Event # ',isingle
-         write(16,'('' WARNING:  Station: >>>'',a4,
+         write(16,'('' WARNING:  Station: >>>'',a6,
      &              ''<<< not found in stationlist!'')') sta(j)
          write(16,*)'Phase therefore skipped'
       endif
 cc      write(6,*)'Event # ',i
-      write(6,'('' WARNING:  Station: >>>'',a4,
+      write(6,'('' WARNING:  Station: >>>'',a6,
      &           ''<<< not found in stationlist!'')') sta(j)
       write(6,*)'Phase therefore skipped'
       write(6,*)
-      if(isingle.gt.0) write(2,'('' DELETED: '',a4,
+      if(isingle.gt.0) write(2,'('' DELETED: '',a6,
      &                           '' not on station-list'')') sta(j)
       goto 15
 17    continue
@@ -1956,7 +1962,7 @@ cc      write(6,*)'Event # ',i
             write(6,'('' epicentral distance:'',f6.1,
      &                 '' > dmax ('',f6.1,'') ==> skipping phase !'')')
      &                 ss1,dmax
-         write(2,'('' DELETED: '',a4,
+         write(2,'('' DELETED: '',a6,
      &             '' epicentral-distance too large'')') sta(j)
          endif
          goto 15
@@ -2509,11 +2515,11 @@ c
             i2=NINT(stnazires(i,4))
             i3=NINT(stnazires(i,6))
             i4=NINT(stnazires(i,8))
-            write(16,'(1x,i3,3x,a4,1x,5(f7.2,''('',i4,'')''))')
+            write(16,'(1x,i3,3x,a6,1x,5(f7.2,''('',i4,'')''))')
      &      i,stn(i),res0,ntot,res1,i1,
      &      res2,i2,res3,i3,res4,i4
          else
-            write(16,'(1x,i3,3x,a4,1x,''-.-'')') i,stn(i)
+            write(16,'(1x,i3,3x,a6,1x,''-.-'')') i,stn(i)
          endif
       enddo
       write(16,*)
@@ -2703,7 +2709,7 @@ c
       k=k+1
 c
 c     station# are stored in array  ISTM(iobs,ievent)
-c     stn(stn#)   is the station-name (a4)
+c     stn(stn#)   is the station-name (a6)
 c     smn(iobs,iev)  is the station-name
 c     sphase(nobs,iev) : 0 for P, 1 for S, -1 for reflected P (M-phase)
 c     and 2 for an s-p phase
@@ -2763,7 +2769,7 @@ c
 cek print P card (or S-card if no P obs for this station available
 c
       iprisecondcard=0
-      write(card,'(2X,A4,1x,2i4,I4,1X,3A1,I1,a1,2I2,3F7.3,F7.3,1x,
+      write(card,'(2X,A6,1x,2i4,I4,1X,3A1,I1,a1,2I2,3F7.3,F7.3,1x,
      &             f7.3,1x,f6.2,1x,f6.4,f7.3)')
      &        smn(k,1),idelta(k),iazi,iain(k),prmk(k,1),char1,prmk(k,2),
      &        kpwt(k,1),
@@ -2832,16 +2838,16 @@ c
               endif
 cek       NOW write a following card (second phase) for same station
 cek  29.3.95
-              write(card(3:6),'(a4)') smn(k-1,1) !write station name for S
-              write(card(21:25),'(3a1,i1,a1)')
+              write(card(3:8),'(a6)') smn(k-1,1) !write station name for S
+              write(card(23:27),'(3a1,i1,a1)')
      &                          prmk(k,1),char1,prmk(k,2),kpwt(k,1),clay
               studres=res(k,1)/sqrt(1.-drm(k,k))
               if(studres.gt.999.) studres=999.999
-              write(card(30:),'(3F7.3,F7.3,1x,f7.3,1x,F6.2,1x,f6.4,
+              write(card(32:),'(3F7.3,F7.3,1x,f7.3,1x,F6.2,1x,f6.4,
      &                          f7.3)')
      &                          pt(k,1),tobs,tcalc(k),
      &                          tcorr,res(k,1),w(k,1),drm(k,k),studres
-cek              if(w(k,1).eq.0.0) write(card(61:61),'(''*'')')
+cek              if(w(k,1).eq.0.0) write(card(63:63),'(''*'')')
             endif
          endif
       endif
@@ -3056,7 +3062,7 @@ cccc         ptcor(j)=ptcor(j)+cc(j)  !  ADJUSTMENT !!! (p-correction)
  49      continue
       enddo
       write(16,50) (stn(j),ptcor(j),cc(j),j=1,nsta)
- 50   format(4(2x,a4,2f7.3))
+ 50   format(4(2x,a6,2f7.3))
       if(nsp.ne.2) goto 72
       write(16,'('' Adjusted station corrections:'')')
       write(16,73)
@@ -3285,7 +3291,7 @@ c
       enddo
       write(7,19) (smn(j,i),PHZZ(j),kpwt(j,i),tt(j),j=1,knobs(i))
       write(7,*)
-   19 format(6(a4,a1,i1,f6.2))
+   19 format(6(a6,a1,i1,f6.2))
 c
   12  continue
       if(.not.single_turbo) write(16,*)
@@ -3327,7 +3333,7 @@ c
       integer isyr2,ismo2,isdy2,ishr2,ismin2,iscor
       character*2 sfreq
 chrm      character*4 snam,stn
-      character*4 stn
+      character*6 stn
 cNEW!!:
       character*6 snam6,stn6
       integer itime,istime1,istime2,juliam
@@ -3400,7 +3406,7 @@ c
       integer maxobsperevent
       parameter (maxobsperevent=180)
       integer nobs
-      character*4 sta(maxobsperevent)
+      character*6 sta(maxobsperevent)
       integer*4 itime
       real sec(maxobsperevent)
       character*1 rmk1(maxobsperevent),rmk2(maxobsperevent),
@@ -3449,7 +3455,7 @@ c
       j2=0
    10 j1=j2+1
       j2=j1+5
-      read(iunit,'(6(a4,a1,i1,f6.2))',end=999)
+      read(iunit,'(6(a6,a1,i1,f6.2))',end=999)
      &            (sta(j),cphase(j),iwt(j),ttime(j),j=j1,j2)
       do j=j1,j2
          if(sta(j).eq.' ')then
@@ -3499,7 +3505,7 @@ c
       integer maxobsperevent
       parameter (maxobsperevent=180)
       integer nobs
-      character*4 sta(maxobsperevent)
+      character*6 sta(maxobsperevent)
       integer*4 itime
       real sec(maxobsperevent)
       character*1 rmk1(maxobsperevent),rmk2(maxobsperevent),
@@ -3543,7 +3549,7 @@ c
 c
       j1=1
       do j=1,maxobsperevent
-         read(iunit,'(2x,a4,2x,a1,3x,i1,3x,f6.2)',end=99)
+         read(iunit,'(2x,a6,2x,a1,3x,i1,3x,f6.2)',end=99)
      &            sta(j),cphase(j),iwt(j),ttime(j)
          if(sta(j).eq.' ')then
             j1=j1-1          ! event is completely read-in
@@ -3553,7 +3559,9 @@ c
       enddo
 c
    99 continue
-      nobs=j1
+c      nobs=j1    !!!! Here is a bug, leading to last pick missing.
+                  !!!! changed by M. Zhang, July 2021
+      nobs=j1+1   
 c
       do j=1,nobs
          sec(j)=origtime+ttime(j)
@@ -3587,7 +3595,7 @@ c
       integer maxobsperevent
       parameter (maxobsperevent=180)
       integer nobs
-      character*4 sta(maxobsperevent)
+      character*6 sta(maxobsperevent)
       integer*4 itime,itime1(maxobsperevent)
       real sec(maxobsperevent)
       character*1 rmk1(maxobsperevent),rmk2(maxobsperevent),
@@ -3623,7 +3631,7 @@ c
          nobs=j-1
          goto 99  ! one event finished!!!
       endif
-      read(cline,'(a4,a1,a1,a1,i1,a1,5i2,f5.2,7x,
+      read(cline,'(a6,a1,a1,a1,i1,a1,5i2,f5.2,7x,
      &            f5.2,2x,a1,i1,4x,f3.0,f3.1)',err=9999)
      &            sta(j),rmk1(j),cphase(j),rmk2(j),iwt(j),clayP,
      &            iyr1(j),imo1(j),iday1(j),ihr1(j),kmin1(j),sec(j),
@@ -3727,7 +3735,7 @@ c
       integer maxobsperevent
       parameter (maxobsperevent=180)
       integer nobs
-      character*4 sta(maxobsperevent)
+      character*6 sta(maxobsperevent)
       integer*4 itime,itime_o,itime1(maxobsperevent)
       real sec(maxobsperevent)
       character*1 rmk1(maxobsperevent),rmk2(maxobsperevent),
@@ -3822,7 +3830,7 @@ c
 c     If here, a phase will be read
 c 
       j=j+1
-      read(cline,'(a4,4x,a8,a1,a1,f8.3,i2,f5.2,f9.0,1x,a8,i3)',
+      read(cline,'(a6,4x,a8,a1,a1,f8.3,i2,f5.2,f9.0,1x,a8,i3)',
      &     err=9999)	   
      &     sta(j),phase_id,rmk1(j),rmk2(j),sec(j),use_flag,
      &     prx(j),amx(j),amx_type,amx_flag
@@ -4438,7 +4446,7 @@ c
             else
                write(13,1302) (rp(1,ir),rp(2,ir),rp(3,ir),ir=1,nrp)
             endif
- 1301    format(/,' event =',i5,' station ',a4,' num. raypoints= ',i5)
+ 1301    format(/,' event =',i5,' station ',a6,' num. raypoints= ',i5)
  1302    format(3(2x,3f7.2))
          endif
       endif ! if .NOT. ...	 
@@ -5313,7 +5321,7 @@ ccc      if(mod((nitt-1),invertratio).ne.0) goto 511
 7     continue
       if(.not.single_turbo)then
          write(16,8) (stn(m),ptcor(m),cc(m),m=1,nsta)
-8        format(5(2x,a4,2f7.3))
+8        format(5(2x,a6,2f7.3))
  6       format(1x,'P correction readjustments:')
          write(16,*)
          write(16,*)'Half adjustments made'
@@ -5938,11 +5946,11 @@ c
          if(nactualsta(i).gt.0)then
             if(.not.single_turbo)then
                if(nsp.eq.2) then
-               write(16,'('' readings for station '',a4,'' : tot='',
+               write(16,'('' readings for station '',a6,'' : tot='',
      &                  i4,''  P:'',i4,''  S:'',i4)')
      &                  stn(i),nactualsta(i),nobsp(i),nobss(i)
                else
-               write(16,'('' readings for station '',a4,'' :'',i4)')
+               write(16,'('' readings for station '',a6,'' :'',i4)')
      &                  stn(i),nactualsta(i)
                endif
             endif
@@ -5981,8 +5989,9 @@ chrm      real phz(3)
       real aa(ist),bb(ist),dd(ist),ee(ist)
       integer icc(ist), iccs(ist)
       real aas(ist),bbs(ist),dds(ist),ees(ist)
-      character*1 cns,cew
-      character cline*80, sta*4
+      character*1 cns,cew,reflch
+      character*40 titl
+      character cline*80, sta*6
       character*1 phzz(ist)
       data phz(1),phz(2),phz(3)/'S','P','m'/
 c
@@ -6037,7 +6046,7 @@ c    &               3x,3i2.2,1x,2i2.2,1x,f5.2)
 52       continue
          write(16,53) (smn(j,i),phzz(j),kpwt(j,i),res(j,i),tctime(j,i),
      &                 del(j),j=1,knobs(i))
-53       format(2(1x,a4,1x,a1,1x,i2,f7.3,2f6.2,4x))
+53       format(2(1x,a6,1x,a1,1x,i2,f7.3,2f6.2,4x))
 2     continue
       write(16,*)
       if(isingle.ne.0) goto 8001
@@ -6151,10 +6160,10 @@ c
          iwarn=0
          if(bb(m).lt.-0.1)then
            iwarn=1
-           write(16,'(5x,''WARNING: Station = '',a4,
+           write(16,'(5x,''WARNING: Station = '',a6,
      &          5x,''!!! Variance  bb('',i3,'') = '',f7.3,'' < 0 !!'')')
      &          stn(m),m,bb(m)
-cek           write(6,'(5x,''WARNING: Station = '',a4,
+cek           write(6,'(5x,''WARNING: Station = '',a6,
 cek     &         5x,''!!! Variance  bb('',i3,'') = '',f7.3,'' < 0 !!'')') 
 cek     &         stn(m),m,bb(m)
 cek           write(6,*)
@@ -6172,16 +6181,16 @@ c
 cek  phz(2)=  P-phases
 c
 cek         if(iwarn.eq.0)then
-         write(16,'(1x,a4,3x,a1,i4,3f8.4,1x,2f8.4)') 
+         write(16,'(1x,a6,3x,a1,i4,3f8.4,1x,2f8.4)') 
      &             stn(m),phz(2),icc(m),ee(m),aa(m),bb(m),dd(m),ptcor(m)
 cek         else
-cek            write(16,'(1x,a4,3x,a1,i4,2f8.4,''   ?.?.?''1x,2f8.4,
+cek            write(16,'(1x,a6,3x,a1,i4,2f8.4,''   ?.?.?''1x,2f8.4,
 cek     &              '' <--- !!'')')
 cek     &             stn(m),phz(2),icc(m),ee(m),aa(m),dd(m),ptcor(m)
 cek            iwarn=0
 cek         endif
 1013     if(nsp.eq.1) goto 39
-cek         write(16,'(1x,a4,3x,a1,i4,25x,f8.4)') 
+cek         write(16,'(1x,a6,3x,a1,i4,25x,f8.4)') 
 cek     &                         stn(m),phz(1),iccs(m),dds(m)
 c  print output for S-wave data  (nsp=2 or 3):
          if(dds(m).eq.0.or.iccs(m).lt.2) goto 13
@@ -6189,10 +6198,10 @@ c  print output for S-wave data  (nsp=2 or 3):
          iwarn=0
          if(bbs(m).lt.-0.1)then
            iwarn=1
-           write(16,'(5x,''WARNING: Station = '',a4,
+           write(16,'(5x,''WARNING: Station = '',a6,
      &        5x,''!!! Variance  bbs('',i3,'') = '',f7.3,'' < 0 !!'')')
      &        stn(m),m,bbs(m)
-cek           write(6,'(5x,''WARNING: Station = '',a4,
+cek           write(6,'(5x,''WARNING: Station = '',a6,
 cek     &         5x,''!!! Variance  bb('',i3,'') = '',f7.3,'' < 0 !!'')') 
 cek     &         stn(m),m,bb(m)
 cek           write(6,*)
@@ -6218,17 +6227,17 @@ c
 cek  phz(1)=  S-phases
 c
 cek         if(iwarn.eq.0)then
-         write(16,'(1x,a4,3x,a1,i4,3f8.4,1x,2f8.4)') 
+         write(16,'(1x,a6,3x,a1,i4,3f8.4,1x,2f8.4)') 
      &             stn(m),phz(1),iccs(m),ees(m),aas(m),bbs(m),dds(m),
      &             stcor1
 cek         else
-cek            write(16,'(1x,a4,3x,a1,i4,2f8.4,''   ?.?.?''1x,2f8.4,
+cek            write(16,'(1x,a6,3x,a1,i4,2f8.4,''   ?.?.?''1x,2f8.4,
 cek     &              '' <--- !!'')')
 cek     &             stn(m),phz(1),iccs(m),ees(m),aas(m),dds(m),stcor1
 cek            iwarn=0
 cek         endif
 c
- 14      format(1x,a4,3x,a1,i4,3f8.4,1x,2f8.4)
+ 14      format(1x,a6,3x,a1,i4,3f8.4,1x,2f8.4)
  39      continue
  13   continue
 c
@@ -6243,18 +6252,32 @@ c
 c
 chrm  Output of the final model
 c
+c M. Zhang changed the output format to fit the origional model format
       if(istaout.eq.2)then
          open(12,file='velout.mod',status='unknown')
-         write(12,*)'Output model:'
+         write(12,'(a40)')'Output model by isingle = 0:'
 c	 write(12,*)(nplay(m),m=1,nmod)
-	 do m=1,nmod
-            write(12,*)nplay(m)
-	    do i=1,nplay(m)
-	       write(12,'(f5.2,5x,f7.2,2x,f7.3,4x)')
-     &              vp(m,i),hp(m,i),vdamp(m,i)
-	    enddo
-	 enddo
-	 close(12)
+      do m=1,nmod
+            write(12,'(i3)')nplay(m)
+            reflch=' '
+            titl=' '
+        do i=1,nplay(m)
+        if(i.eq.1)then
+c   The surface layer velocity is less than the lower one
+            if(vp(m,i) .gt. vp(m,i+1))then
+                write(12,'(f5.2,5x,f7.2,2x,f7.3,3x,a1,1x,a40)')
+     &              vp(m,i+1),hp(m,i),vdamp(m,i),reflch,titl
+            else
+                write(12,'(f5.2,5x,f7.2,2x,f7.3,3x,a1,1x,a40)')
+     &              vp(m,i),hp(m,i),vdamp(m,i),reflch,titl
+            endif
+        else
+            write(12,'(f5.2,5x,f7.2,2x,f7.3,3x,a1)')
+     &          vp(m,i),hp(m,i),vdamp(m,i),reflch
+        endif
+        enddo
+      enddo
+      close(12)
       endif 
       return
       end ! of subr. finalstaresi
@@ -6274,7 +6297,7 @@ c
       integer iseis,iscon,isdmp,isamp,ier,i
       real cormag,sconst,sdampf,voltgain,xmag
       character*2 ifilt
-      character staname*4
+      character staname*6
 c
       nmag=0
       xmagnitude=0.
@@ -6283,7 +6306,7 @@ c
          if(kpwt(i,ievent).gt.4) goto 40 ! weights > 4 are no readings!!!
 c                              station# are stored in array  ISTM(iobs,ievent)
 c                              smn(iobs,iev)  is the station-name
-         write(staname,'(a4)') smn(i,ievent)
+         write(staname,'(a6)') smn(i,ievent)
          call STINP(itime,staname,ifilt,iseis,iscon,
      &                            isdmp,isamp,cormag,ier)
          if(ier.lt.0) goto 40  ! seismo-parameters of station not found
@@ -7978,7 +8001,7 @@ c
 c
       integer nrp
       real rp(3,inrpmax)
-      character*4 staname
+      character*6 staname
 c
       integer j
       real zzz,dzzz
@@ -7989,7 +8012,7 @@ c
             if(dzzz.lt.0.0)then
                write(6,'(1x,''ray in the air... ! rp3='',f6.3,
      &         '' ZZ='',f6.3,'' dz='',f6.3,'' rp# ='',i2,'' nrp='',i2,
-     &         '' STN='',a4,''i '',i4)')
+     &         '' STN='',a6,''i '',i4)')
      &         rp(3,j),zzz,dzzz,j,nrp,staname,isingle
             endif
          endif
@@ -8105,7 +8128,7 @@ c
       real rp(3,inrpmax)
       integer nrp
       real vtop,ttt
-      character*4 staname
+      character*6 staname
 c
       logical hypocintop
       real rpn(3,10)
@@ -8253,7 +8276,7 @@ c
       deltat2=(ttt2new-ttt2old)
       if(ABS(deltat1).gt.1e-5.or.ABS(deltat2).gt.1e-5)then
          write(6,'(1x,''BENDRAY>>> ray bended below surface!'',
-     &                '' Station: '',a4)') staname
+     &                '' Station: '',a6)') staname
          write(6,'(1x,''dt1='',f6.3,''   dt2='',f6.3)') deltat1,deltat2
       endif
       ttt=ttt+deltat1+deltat2
