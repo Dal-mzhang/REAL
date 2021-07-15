@@ -26,3 +26,24 @@ $ttime = "./tt_db/ttdb.txt";
 
 system("REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime");
 print"REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime\n";
+
+#how to evaluate your parameters:
+#1. check P and S t_dist curve (if too narrow, increase nrt; vice versa)
+#2. make sure you lose very few events after the second selection (if lose too many, increase thresholds, e.g., np0, ns0, nps0 and/or npsboth0)
+#3. go to event_verify and check those worst events (large station gap and traveltime residual) and make sure they are ture events, 
+#   otherwise, increase your thresholds.
+#4. go to the ../hypoinverse dir, run hypoinverse, unstable events usually show REMARK "-", use their ID to check their waveform in event_verify
+#   if they are false events, increase your thresholds.
+    
+#tips:
+#1. decrease drt (0 is the best) will improve the stability but will cost more time, 0 means no initiating picks will be removed.
+#   It is time afforable (a couple of minutes) if your total number of grids is only about 1000 (i.e.,10x10x10).
+#2. nrt and grid size (tdx and tdh) trade off, when you use small grid size, choose a large nrt (but may < 2.0)
+#   similarly, when you use large grid size, please use a small nrt. You don't want to remove too many associated picks in the initiating pick pool
+#   and increase the risk. Thus, please decrease the drt as well.
+#3. nxd and rsel can be used to remove those suspicious events and picks, respectively.
+#4. you may get less events when you use loose thresholds compared to strict ones when the drt > 0.
+#5. the main purpose is assocaition, not try to refine the grid to have a better location if you don't want to waste your time.
+#6. common problems: too slow -> the total number of girds is too big
+#                    flase events -> too loose thresholds
+#                    bad performance -> didn't use optimal parameters for different grid size
