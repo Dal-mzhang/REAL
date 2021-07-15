@@ -14,9 +14,9 @@ perl transferWA.pl #create waveforms with corrected amplitude to calculate local
 cd Pick (unzip 20161014.zip and move to step 3 to save time)
 python trigger_p_amp.py #create P picks and amplitudes using STA/LTA
 python trigger_s_amp.py #create S picks and amplitudes using STA/LTA
-(I have been working on earthquake association and location using machine-learning picks and REAL)
+(see Pick_PhaseNet, it shows how to get machine-learning picks)
 (Compared with STA/LTA, both detection ability and locaiton accruacy are significantly improved)
-(But machine-learning picker is not available in this package, which can be found at https://github.com/wayneweiqiang/PhaseNet)
+(PhaseNet can be found at https://github.com/wayneweiqiang/PhaseNet)
 
 3. Associate and locate events using STA/LTA picks and REAL
 cd REAL
