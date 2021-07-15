@@ -30,6 +30,7 @@ perl runREAL.pl
 cd t_dist
 awk -f pha_t-dist.awk #create travel time vs. distance
 t_dist.m (matlab) #roughly estimate association result from travel time vs. distance
+cd event_verify # verify events with the smallest number of picks using python scripts to evaluate your parameters
 new version REAL generates simulated annealing locations, which can be directly used in hypoDD.
 
 4. refine earthquake locations using VELEST
@@ -47,7 +48,7 @@ plot_3dscatter.m (matlab) #plot location distribution in 3-D
 
 5. refine earthquake locations using hypoinverse
 cd hypoinverse
-bash run_hypoinverse.sh
+bash run_hypoinverse.sh #format conversion scripts are provided
 
 6. further improve earthquake locations using hypoDD
 you may use the REAL's SA locations, VELEST locations, or hypoinverse locations as initial locations.
@@ -61,3 +62,4 @@ plot_3dscatter.m (matlab) #plot locations in 3-D
 
 7. calculate magnitude
 cd Magnitude
+python calc_mag.py #an example for magnitude estimation (assume you have waveforms with removing response)
