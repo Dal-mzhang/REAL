@@ -54,10 +54,11 @@ for i in range(len(ppick_tmp)):
             if float(pprob[j]) >= prob_threshold:
                 f.write('{},{},{},{},{},1,'.format(year,mon,day,net,name))
                 tp = int(ppick[j])*samplingrate+ss
+                #assume your waveforms were removed response
                 #we cannot estimate the amplitude under the wood-anderson response
                 #just roughly and empirically estimate it
                 #to have more accurate magnitude, please re-calculate the magnitude after your get events
-                #see calc_mag.py in REAL directory
+                #see calc_mag.py 
                 f.write('{},{},{}\n'.format(tp,pprob[j],float(pamp[j])*2080*25))
 
     if len(spick_tmp[i])>2:
@@ -78,10 +79,11 @@ for i in range(len(ppick_tmp)):
             if float(sprob[j]) >= prob_threshold:
                 g.write('{},{},{},{},{},1,'.format(year,mon,day,net,name))
                 ts = int(spick[j])*samplingrate+ss
+                #assume your waveforms were removed response
                 #we cannot estimate the amplitude under the wood-anderson response
                 #just roughly and empirically estimate it
                 #to have more accurate magnitude, please re-calculate the magnitude after your get events
-                #see calc_mag.py in REAL directory
+                #see calc_mag.py 
                 g.write('{},{},{}\n'.format(ts,sprob[j],float(samp[j])*2080*25))
 
     # Remove the previous directory
