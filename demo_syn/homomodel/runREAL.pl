@@ -10,7 +10,7 @@ $dir = "../layermodel/pk";
 $station = "../station.dat";
 $ttime = "../tt_db/ttdb.txt";
 
-system("time REAL -D$D -R$R -S$S -V$V $station $dir");
-print"REAL -D$D -R$R -S$S -V$V $station $dir\n";
+system("time ../../bin/REAL -D$D -R$R -S$S -V$V $station $dir");
+print"../../bin/REAL -D$D -R$R -S$S -V$V $station $dir\n";
 
 #Note that no traveltime table and -G 
