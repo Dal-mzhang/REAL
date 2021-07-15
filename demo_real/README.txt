@@ -30,6 +30,7 @@ perl runREAL.pl
 cd t_dist
 awk -f pha_t-dist.awk #create travel time vs. distance
 t_dist.m (matlab) #roughly estimate association result from travel time vs. distance
+new version REAL generates simulated annealing locations, which can be directly used in hypoDD.
 
 4. refine earthquake locations using VELEST
 cd VELEST
@@ -43,7 +44,14 @@ perl convertoutput.pl #convert location format and further select events based o
 (some false detections may occur around or close to the boundary of the study area, remove events with large station gaps or large residuals)
 plot_3dscatter.m (matlab) #plot location distribution in 3-D
 
-5. further improve earthquake locations using hypoDD
+
+5. refine earthquake locations using hypoinverse
+cd hypoinverse
+bash run_hypoinverse.sh
+
+6. further improve earthquake locations using hypoDD
+you may use the REAL's SA locations, VELEST locations, or hypoinverse locations as initial locations.
+here use velest as example
 cd hypoDD
 bash createstation.sh #create station file for hypoDD
 perl selectphase.pl #create phase file for hypoDD (combine original picks and improved locations by VELEST)
@@ -51,3 +59,5 @@ ph2dt ph2dt.inp #create paired traveltime difference
 hypoDD hypoDD.inp #you may change parameters in your case. You may use the improved velocity model (isingle=0) that obtained with VELEST (velout.mod).
 plot_3dscatter.m (matlab) #plot locations in 3-D
 
+7. calculate magnitude
+cd Magnitude
