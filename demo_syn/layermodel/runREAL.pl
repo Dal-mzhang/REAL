@@ -11,5 +11,5 @@ $dir = "./pk";
 $station = "../station.dat";
 $ttime = "../tt_db/ttdb.txt";
 
-system("time REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime");
-print"REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime\n";
+system("time ../../bin/REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime");
+print"../../bin/REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime\n";
