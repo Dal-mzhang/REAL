@@ -1,0 +1,33 @@
+Updates and changes
+REAL 1.0 
+First release on Github on June 27, 2019
+
+Sept. 13, 2019
+1. Consider Earth's ellipticity when calculating distance (gcarc)
+2. Calculate and output azimuth for each station/pick and station azimuth gap for one event
+3. Exclude events with large station gap.
+4. Fix a bug
+
+Nov. 14, 2019
+1. Utilize stations within a specified distance (see: GCarc0)
+2. Update code only, didn’t change the demo 
+
+March 8, 2021
+1. Use cos(latcenter) to balance distance in km for lat. and lon.
+2. Eliminate event splitting using a different strategy
+
+May 25, 2021 
+Add a new constraint (replace previous nppp by npsboth0) to significantly improve the 
+association reliability when station coverage is poor (through counting the number of stations 
+with both P and S picks).
+
+July 15, 2021
+1. ouput refined locations and phases using a simulated annealing method
+2. for event selection and pick selection, use distance weighted number of picks 
+3. use rsel to remove outlier picks with large distance
+4. add a new parameter drt 
+5. add a new parameter nxd
+6. add rweig and rnps in the code (default)
+6. provide PhaseNet picker demo
+7. provide hypoinverse location demo
+
