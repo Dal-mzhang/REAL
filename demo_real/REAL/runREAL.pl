@@ -43,7 +43,8 @@ print"../../bin/REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime\n";
 #   and increase the risk. Thus, please decrease the drt as well.
 #3. nxd and rsel can be used to remove those suspicious events and picks, respectively.
 #4. you may get less events when you use loose thresholds compared to strict ones when the drt > 0.
-#5. the main purpose is assocaition, not try to refine the grid to have a better location if you don't want to waste your time.
-#6. common problems: too slow -> the total number of girds is too big
+#5. the main purpose is assocaition, not try to refine the grid to have a better location.
+#6. more picks or stations, more strict thresholds.
+#7. common problems: too slow -> the total number of girds is too big
 #                    flase events -> too loose thresholds
 #                    bad performance -> didn't use optimal parameters for different grid size
