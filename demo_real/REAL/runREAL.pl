@@ -24,8 +24,8 @@ $dir = "../Pick/$year$mon$day";
 $station = "../Data/station.dat";
 $ttime = "./tt_db/ttdb.txt";
 
-system("REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime");
-print"REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime\n";
+system("../../bin/REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime");
+print"../../bin/REAL -D$D -R$R -G$G -S$S -V$V $station $dir $ttime\n";
 
 #how to evaluate your parameters:
 #1. check P and S t_dist curve (if too narrow, increase nrt; vice versa)
