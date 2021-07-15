@@ -11,7 +11,7 @@ python mk_inputfile.py $phasein $stationin > hypoinput.arc
 #please run mk_velmodel.py to convert the Vp and Vs models
 #then mannually adjust them
 #Note: the hypoinverse cannot allow two layers have the same velocity
-#If you get consistent depths, you have this issue! 
+#If you get constant depths, you have this issue! 
 #Slightly ajdust the model (e.g., increase vel a little bit with depth)
 
 ####step 3####### run hypoinverse
