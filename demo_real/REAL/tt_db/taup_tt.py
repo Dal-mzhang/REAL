@@ -1,6 +1,7 @@
 import math
 import obspy.taup
 import numpy as ny
+import sys
 from obspy.taup import TauPyModel
 from obspy.taup.taup_create import build_taup_model
 build_taup_model("itvel.nd")
@@ -18,6 +19,8 @@ with open("ttdb.txt", "w") as f:
             i = 0
             pi = 0
             si = 0
+            p_time = -100
+            s_time = -100
             while(i<len(arrivals)):
                 arr = arrivals[i]
                 i = i + 1
@@ -36,5 +39,8 @@ with open("ttdb.txt", "w") as f:
                     si = 1
                 if(pi == 1 and si == 1):
                     break
+                    
+            if(pi == 0 or si == 0):
+                sys.exit("Error, no P or S traveltime, most likely low velocity zone issue: dist=%.2f, dep=%.2f, tp=%.2f, ts=%.2f" % (dist,dep,p_time,s_time))
                     
             f.write("{} {} {} {} {} {} {} {} {} {}\n".format(dist, dep, p_time,s_time, p_ray_param, s_ray_param, p_hslowness, s_hslowness, pname, sname))
