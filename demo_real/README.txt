@@ -62,4 +62,4 @@ plot_3dscatter.m (matlab) #plot locations in 3-D
 
 7. calculate magnitude
 cd Magnitude
-python calc_mag.py #an example for magnitude estimation (assume you have waveforms with removing response)
+python calc_mag.py #an example for magnitude estimation (assume you have waveforms after removing response)
