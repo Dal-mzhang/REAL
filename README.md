@@ -3,7 +3,9 @@ The REAL package contains following main files:
 1) REAL: code for Rapid Earthquake Association and Location 
 2) VELEST: code for 1-D inversion of velocities and hypocenter locations
 3) domo_syn: demo for synthetic tests
-4) demo_real: demo for real data
+4) demo_real: demo for real data (data downloading-> picking -> associaiton -> location -> relocation)
+
+A more comprehensive workflow will be available at https://github.com/Dal-mzhang/LOC-FLOW
 
 # Usage:
 See user guide and README files
@@ -25,4 +27,4 @@ Miao Zhang, Dalhousie University, miao.zhang@dal.ca
 # Versions:
 REAL1.0, June  27, 2019
 
-The codes are improvded over time, see changes in the tutorial.
+The codes are improvded over time, see changes in the Modified_History.
