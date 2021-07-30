@@ -314,8 +314,8 @@ int main(int argc, char** argv)
     fprintf(stderr, "Max Setting: Nst %-5d Nps %-5d Ntb %-5d\n", Nst, Nps, Ntb);
     // If no specified distance range, make sure to use distance covered by
     // traveltime table
-    if ((trx > 0 && GCarc0 == 180) || (trx > 0 && GCarc0 > trx))
-        GCarc0 = trx;
+    if ((trx > 0 && GCarc0 == 180) || (trx > 0 && GCarc0 > trx - 0.05))
+        GCarc0 = trx - 0.05;
 
     /* read station information */
     if (igrid == 0) {
@@ -540,9 +540,9 @@ int main(int argc, char** argv)
             latref0 = ST[m].stla;
         }
 
-        tpmin = tpmin0 - (GCarc0 * 111.19 / vp0) - nrt * ptw;
+        tpmin = tpmin0 - 0.5*(GCarc0 * 111.19 / vp0) - nrt * ptw;
         tpmax = tpmin0 + (GCarc0 * 111.19 / vp0) + nrt * ptw;
-        tsmin = tpmin0 - (GCarc0 * 111.19 / vs0) - nrt * stw;
+        tsmin = tpmin0 - 0.5*(GCarc0 * 111.19 / vs0) - nrt * stw;
         tsmax = tpmin0 + (GCarc0 * 111.19 / vs0) + nrt * stw;
 
         Nps2 = DetermineNprange(ptrig, tpmax, Nst, Nps);
