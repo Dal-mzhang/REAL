@@ -216,14 +216,13 @@ int main(int argc, char** argv)
 {
     int i, j, k, l, m, n, nk;
     FILE *fp, *fpr, *fp1, *fp2, *fp3, *fp4;
-    char output1[256], output2[256], dir[256], input[256];
+    char dir[256], input[256];
     int test, error, pcount, scount, psboth, puse, nnn, ps, nselect;
     double dx, dh, rx, rh, dx1, dx2, rx1, rx2;
-    double tp0_cal, ts0_cal, tp_cal, ts_cal, tp_pre, ts_pre, tp_pre_b, ts_pre_b,
-        tp_pre_e, ts_pre_e;
-    double median, std, GCarc, rdist, baz, distmax;
+    double tp_cal, ts_cal, tp_pre, ts_pre, tp_pre_b, ts_pre_b, tp_pre_e, ts_pre_e;
+    double GCarc, rdist, baz, distmax;
     double told, lonref, latref, elevref, latref0, lonref0;
-    double lonmin, lonmax, latmin, latmax, lat0, lon0, dep, latcenter;
+    double lat0, lon0, dep, latcenter;
     double stlamin, stlamax, stlomin, stlomax;
     int ttd, tth, tts, mmm;
     int nlat, nlon, ndep;
@@ -293,7 +292,7 @@ int main(int argc, char** argv)
 
     // Usage
     if (argc < 3 || error == 1) {
-        fprintf(stderr, "Usage:  Rapid Earthquake Association and Location (REAL, July 2021 version)\n");
+        fprintf(stderr, "Usage:  Rapid Earthquake Association and Location (REAL, Aug. 2021 version)\n");
         fprintf(stderr, "   -D(nyear/nmon/nday/lat_center) -R(rx/rh/tdx/tdh/tint[/gap/GCarc0/latref0/lonref0]]) -V(vp0/vs0/[s_vp0/s_vs0/ielev])\n");
         fprintf(stderr, "   -S(np0/ns0/nps0/npsboth0/std0/dtps/nrt[/drt/nxd/rsel/ires]) [-G(trx/trh/tdx/tdh)] station pickdir [ttime]\n");
         fprintf(stderr, "       ------------------------------------explanation--------------------------------------------\n");
@@ -971,16 +970,14 @@ int main(int argc, char** argv)
 void RelocationSA(int id, double maxla, double maxlo, double maxdep,
     double maxorg, double SAcoef, long int SAnum)
 {
-    int it, iter;
     extern CLEARUP* CLEAR2;
     extern STATION* ST;
     extern TTT* TB;
     extern double vp0, vs0, s_vp0, s_vs0, tdh, tdx, GCarc0;
-    double cdla, cdlo, cddp, cdot, t, res, weight, weig, weig0, torg, orgt,
-        trms_min, total_rms, evla0, evlo0, evdp0, evot0, evla, evlo, evdp, evot,
-        p1, p2;
+    double cdla, cdlo, cddp, cdot, t, res, weight, weig, torg,
+        trms_min, total_rms, evla0, evlo0, evdp0, evot0, evla, evlo, evdp, evot;
     double tp_cal, ts_cal, GCarc, baz, rdist;
-    int ih, ig, i, j, k, m;
+    int iter, ih, ig, j, k;
     extern HYPO* loc;
     extern int igrid;
     long int s;
@@ -1158,7 +1155,7 @@ double uniform(double a, double b, long int* seed)
 
 double cauchyrnd(double t, long int* s)
 {
-    double u, y, uu, x, sgn;
+    double u, uu, x, sgn;
     u = uniform(0.0, 1.0, s);
     sgn = 1.0;
     if ((u - 0.5) < 0.)
@@ -1179,39 +1176,63 @@ void ReselectClear(CLEARUP* CLEAR, int NN, double dxmin)
     char net[5], sta[8], phase[5];
     double abs_pk, pk, amp, res, baz, weig, mag, stlat, stlon;
     double degg, GCarc, psweig;
-    double ts_median, ts_std, ts_min;
+    double ts_median, ts_std, ts_min, ts_max;
     extern double rsel;
+    int imax;
 
     // if the nearest station is too far, remove this suspicious event
     // remove those potential outliers in large distance (e.g.,3*std)
     for (i = 0; i < NN; i++) {
         ts = (double*)malloc(CLEAR[i].pscount * sizeof(double));
-        for (j = 0; j < CLEAR[i].pscount; j++) {
-            ts[j] = CLEAR[i].pk[j].pk;
-            if (strcmp(CLEAR[i].pk[j].phase, "P") < 1.0e-5) {
-                ts[j] = CLEAR[i].pk[j].pk * 1.731;
-            }
-        }
+        //first time
         ts_min = 1.0e8;
+        ts_max = -1.0e8;
+        imax = 0;
         for (j = 0; j < CLEAR[i].pscount; j++) {
             ts[j] = CLEAR[i].pk[j].pk;
             if (strcmp(CLEAR[i].pk[j].phase, "P") < 1.0e-5) {
                 ts[j] = CLEAR[i].pk[j].pk * 1.731;
             }
             if(ts[j] < ts_min) ts_min = ts[j];
+            if(ts[j] > ts_max) {ts_max = ts[j]; imax=j;}
         }
-        if (ts_min*vs0 > dxmin) CLEAR[i].pscount = 0;
+        if (ts_min*vs0 > dxmin) {CLEAR[i].pscount = 0; continue;}
         ts_median = CalculateMedian(ts, CLEAR[i].pscount);
+        ts[imax] = ts_median; // replace the furest pick by the median to get STD
         ts_std = CalculateStd(ts, ts_median, CLEAR[i].pscount);
-        free(ts);
         for (j = 0; j < CLEAR[i].pscount; j++) {
-            if (CLEAR[i].pk[j].pk > 0 && CLEAR[i].pk[j].pk > ts_median + 0.75 * rsel * ts_std) {
+            ts[j] = CLEAR[i].pk[j].pk;
+            if (strcmp(CLEAR[i].pk[j].phase, "P") < 1.0e-5) {ts[j] = CLEAR[i].pk[j].pk * 1.731;}
+            if (ts[j] > ts_median + 0.75 * rsel * ts_std) {
                 CLEAR[i].pscount = CLEAR[i].pscount - 1;
                 for (k = j; k < CLEAR[i].pscount; k++) {
                     CLEAR[i].pk[k] = CLEAR[i].pk[k + 1];
                 }
             }
         }
+        //second time
+        ts_max = -1.0e8;
+        for (j = 0; j < CLEAR[i].pscount; j++) {
+            ts[j] = CLEAR[i].pk[j].pk;
+            if (strcmp(CLEAR[i].pk[j].phase, "P") < 1.0e-5) {
+                ts[j] = CLEAR[i].pk[j].pk * 1.731;
+            }
+            if(ts[j] > ts_max) {ts_max = ts[j]; imax=j;}
+        }
+        ts_median = CalculateMedian(ts, CLEAR[i].pscount);
+        ts[imax] = ts_median; // replace the furest pick by the median to get STD
+        ts_std = CalculateStd(ts, ts_median, CLEAR[i].pscount);
+        for (j = 0; j < CLEAR[i].pscount; j++) {
+            ts[j] = CLEAR[i].pk[j].pk;
+            if (strcmp(CLEAR[i].pk[j].phase, "P") < 1.0e-5) {ts[j] = CLEAR[i].pk[j].pk * 1.731;}
+            if (ts[j] > ts_median + 0.75 * rsel * ts_std) {
+                CLEAR[i].pscount = CLEAR[i].pscount - 1;
+                for (k = j; k < CLEAR[i].pscount; k++) {
+                    CLEAR[i].pk[k] = CLEAR[i].pk[k + 1];
+                }
+            }
+        }
+        free(ts);
     }
 
     // sort baz
@@ -1414,8 +1435,8 @@ int ReselectFinal(SELECT* RELC, int m)
 
     // exclude the case – one event is associated twice
     for (i = 1; i < m; i++) {
-        for (k = 0; k < m, k != i; k++) {
-            if (fabs(RELC[i].atime1 - RELC[k].atime1) < 1.0 * tint) {
+        for (k = 0; k < m; k++) {
+            if (k != i && fabs(RELC[i].atime1 - RELC[k].atime1) < 1.0 * tint) {
                 //if (RELC[i].ntotal1 > RELC[k].ntotal1 || (RELC[i].ntotal1 == RELC[k].ntotal1 && RELC[i].std1 < RELC[k].std1)) {
                 if (RELC[i].weig1 > RELC[k].weig1 || (fabs(RELC[i].weig1 - RELC[k].weig1) < 1 && RELC[i].std1 < RELC[k].std1)) {
                     RELC[k].atime1 = 1.0e8;
@@ -1762,7 +1783,7 @@ void SortTriggers0(TRIG** tgp, TRIG** tgs, double** array1, double** array2,
     double** pamp, double** samp, double** pweight,
     double** sweight, int m, int n)
 {
-    int i, j, k, l;
+    int i, j, k;
     double a, b, c;
 
     for (i = 0; i < m; ++i) {
@@ -2265,7 +2286,7 @@ void ddistaz(double stalat, double stalon, double evtlat, double evtlon,
     // double delta, az, baz;
     double scolat, slon, ecolat, elon;
     double a, b, c, d, e, aa, bb, cc, dd, ee, g, gg, h, hh, k, kk;
-    double rhs1, rhs2, sph, rad, del, daz, dbaz, pi, piby2;
+    double rhs1, rhs2, sph, rad, del, dbaz, pi, piby2;
     /*
   stalat = atof(argv[1]);
   stalon = atof(argv[2]);
