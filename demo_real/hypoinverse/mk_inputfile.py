@@ -21,11 +21,24 @@ def gen_sta_hypo(stationin):
     with open(stationin, 'r') as fr:
         for line in fr.readlines():
             line = line.strip().split()
-            latD, latM = decdeg2dms(float(line[1]))
-            lonD, lonM = decdeg2dms(float(line[0]))
-            for channel in ['001', '002', '003']:
-                g.write('{:<5s} {:2s}  {:3s} {:3d} {:7.4f} {:3d} {:7.4f}E{:4d}\n'.format(line[3], line[2], channel ,latD, latM, lonD, lonM, int(float(line[5])*1000)))
-                #g.write('{:<5s} {:2s}  {:3s} {:3d} {:7.4f} {:3d} {:7.4f}E{:4d}\n'.format(line[3], line[2], channel ,latD, latM, lonD, lonM, 0))
+            lat_0=float(line[1])
+            lon_0=float(line[0])
+            latD, latM = decdeg2dms(abs(lat_0))
+            lonD, lonM = decdeg2dms(abs(lon_0))
+            if lat_0 > 0 and lon_0 >= 0:
+                for channel in ['001', '002', '003']:
+                    #g.write('{:<5s} {:2s}  {:3s} {:3d} {:7.4f} {:3d} {:7.4f}E{:4d}\n'.format(line[3], line[2], channel ,latD, latM, lonD, lonM, 0))
+                    g.write('{:<5s} {:2s}  {:3s} {:3d} {:7.4f}N{:3d} {:7.4f}E{:4d}\n'.format(line[3], line[2], channel ,latD, latM, lonD, lonM, int(float(line[5])*1000)))
+            if lat_0 > 0 and lon_0 < 0:
+                for channel in ['001', '002', '003']:
+                    g.write('{:<5s} {:2s}  {:3s} {:3d} {:7.4f}N{:3d} {:7.4f}W{:4d}\n'.format(line[3], line[2], channel ,latD, latM, lonD, lonM, int(float(line[5])*1000)))
+            if lat_0 <= 0 and lon_0 >= 0:
+                for channel in ['001', '002', '003']:
+                    g.write('{:<5s} {:2s}  {:3s} {:3d} {:7.4f}S{:3d} {:7.4f}E{:4d}\n'.format(line[3], line[2], channel ,latD, latM, lonD, lonM, int(float(line[5])*1000)))
+            if lat_0 <= 0 and lon_0 < 0:
+                for channel in ['001', '002', '003']:
+                    g.write('{:<5s} {:2s}  {:3s} {:3d} {:7.4f}S{:3d} {:7.4f}W{:4d}\n'.format(line[3], line[2], channel ,latD, latM, lonD, lonM, int(float(line[5])*1000)))
+
 
 class Event(object):
     def __init__(self,line):
@@ -132,20 +145,39 @@ class SeismicReport(object):
 
     def makeHypoPhase(self):
         # Event format from "Summary header format Y2000"
-        eventFormat="{:4s}{:2s}{:2s}{:02d}{:02d}{:02d}{:02d}{:02d} {:>2d}{:02d}{:>3d}E{:>2d}{:02d}{:>3d}{:02d}{:>1d}{:02d}"
+        eventFormat1="{:4s}{:2s}{:2s}{:02d}{:02d}{:02d}{:02d}{:02d} {:>2d}{:02d}{:>3d}E{:>2d}{:02d}{:>3d}{:02d}                                                                                      {:1s}{:>1d}{:02d}"
+        eventFormat2="{:4s}{:2s}{:2s}{:02d}{:02d}{:02d}{:02d}{:02d} {:>2d}{:02d}{:>3d} {:>2d}{:02d}{:>3d}{:02d}                                                                                      {:1s}{:>1d}{:02d}"
+        eventFormat3="{:4s}{:2s}{:2s}{:02d}{:02d}{:02d}{:02d}{:02d}S{:>2d}{:02d}{:>3d}E{:>2d}{:02d}{:>3d}{:02d}                                                                                      {:1s}{:>1d}{:02d}"
+        eventFormat4="{:4s}{:2s}{:2s}{:02d}{:02d}{:02d}{:02d}{:02d}S{:>2d}{:02d}{:>3d} {:>2d}{:02d}{:>3d}{:02d}                                                                                      {:1s}{:>1d}{:02d}"
         for event in self.events:
             # if len(event.stations) < 15:
             #     continue
             hour, minute, second = event.stime.split(':')
             mag1,mag2 = event.mag.split('.')
             mag1 = int(mag1)
+            mag2 = int(mag2[0:2])
+            if float(event.mag) < 0:
+                mag1 = 0
+                mag2 = 0
             sec1 = second[0:2]
             sec2 = second[3:5]
             lat1, lat2, lat3 = self.processLatLon(event.lat)
             lon1, lon2, lon3 = self.processLatLon(event.lon)
             dep1, dep2 = self.processDep(event.depth)
             # print("0123456789012345678901234567890123456789012345678901234567890")
-            print(eventFormat.format(event.year,event.month,event.day,int(hour),int(minute),int(sec1),int(sec2),lat1,lat2,lat3,lon1,lon2,lon3,dep1,dep2,mag1,int(mag2[0:2])))
+            if lat1 > 0 and lon1 >= 0:
+                print(eventFormat1.format(event.year,event.month,event.day,int(hour),int(minute),int(sec1),int(sec2),lat1,lat2,lat3,lon1,lon2,lon3,dep1,dep2,'L',mag1,mag2))
+            if lat1 > 0 and lon1 < 0:
+                lon1=(-1)*lon1
+                print(eventFormat2.format(event.year,event.month,event.day,int(hour),int(minute),int(sec1),int(sec2),lat1,lat2,lat3,lon1,lon2,lon3,dep1,dep2,'L',mag1,mag2))
+            if lat1 <= 0 and lon1 >= 0:
+                lat1=(-1)*lat1
+                print(eventFormat3.format(event.year,event.month,event.day,int(hour),int(minute),int(sec1),int(sec2),lat1,lat2,lat3,lon1,lon2,lon3,dep1,dep2,'L',mag1,mag2))
+            if lat1 <= 0 and lon1 < 0:
+                lat1=(-1)*lat1
+                lon1=(-1)*lon1
+                print(eventFormat4.format(event.year,event.month,event.day,int(hour),int(minute),int(sec1),int(sec2),lat1,lat2,lat3,lon1,lon2,lon3,dep1,dep2,'L',mag1,mag2))
+            #print(eventFormat.format(event.year,event.month,event.day,int(hour),int(minute),int(sec1),int(sec2),lat1,lat2,lat3,*lon1,lon2,lon3,dep1,dep2,'L',mag1,mag2))
             otimeStr = event.year+event.month+event.day+" "+event.stime
             otime = datetime.datetime.strptime(otimeStr, '%Y%m%d %H:%M:%S.%f')
             baseTime = otime - datetime.timedelta(seconds=otime.second, microseconds=otime.microsecond)
