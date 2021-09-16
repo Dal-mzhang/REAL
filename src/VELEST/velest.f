@@ -6148,9 +6148,9 @@ c                              write on file 12
      &                   ptcor(m),stcor(m)
             if(cns.eq.'S') xla(m)=-xla(m)
             if(cew.eq.'E') xlo(m)=-xlo(m)
-            if(m.eq.1)then
-               cline(47:)='       lon,z,model,icc,ptcor,stcor'
-            endif
+c            if(m.eq.1)then
+c               cline(47:)='       lon,z,model,icc,ptcor,stcor'
+c            endif
             write(12,'(a)') cline
          endif
 c                            end writing on file 12
