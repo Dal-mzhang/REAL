@@ -1210,6 +1210,7 @@ void ReselectClear(CLEARUP* CLEAR, int NN, double dxmin)
                 }
             }
         }
+        if (CLEAR[i].pscount < 2) {CLEAR[i].pscount = 0; continue;}
         //second time
         ts_max = -1.0e8;
         for (j = 0; j < CLEAR[i].pscount; j++) {
@@ -1231,6 +1232,7 @@ void ReselectClear(CLEARUP* CLEAR, int NN, double dxmin)
                     CLEAR[i].pk[k] = CLEAR[i].pk[k + 1];
                 }
             }
+            if (CLEAR[i].pscount < 2) {CLEAR[i].pscount = 0; continue;}
         }
         free(ts);
     }
@@ -1312,6 +1314,7 @@ void ReselectClear(CLEARUP* CLEAR, int NN, double dxmin)
                 }
             }
         }
+        if (CLEAR[i].pscount < 2) {CLEAR[i].pscount = 0; continue;}
     }
 
     for (i = 0; i < NN; i++) {
@@ -1348,6 +1351,7 @@ void ReselectClear(CLEARUP* CLEAR, int NN, double dxmin)
                 }
             }
         }
+        if (CLEAR[i].pscount < 2) {CLEAR[i].pscount = 0; continue;}
         CLEAR[i].mag_median = CalculateMedian(mag0, CLEAR[i].pscount);
         CLEAR[i].mag_std = CalculateStd(mag0, CLEAR[i].mag_median, CLEAR[i].pscount);
         res_median = CalculateMedian(res0, CLEAR[i].pscount);
