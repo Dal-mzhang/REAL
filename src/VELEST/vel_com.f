@@ -16,7 +16,9 @@ c      parameter(ieq=1)        ! number of earthquakes (single event mode ONLY)
      &          itotmodels=2, ! max. number of velocity models
      &          inltot=100,    ! max. number of layers per velocity model
      &          ist=650,      ! max. number of stations in stationlist
-     &          maxobsperevent=180) ! max. number of observations per event
+     &          maxobsperevent=180) ! max. number of observations per event 
+                                    ! notes from M. Zhang: maxobsperevent is fixed as 180 in the velest.f, thus make it no more than 180.
+                                    ! if you want to increase this, you need to correspondingly increase "maxobsperevent" and the dimension of "iga" in velest.f.
 c
 c
 c-----------------------------------------------------------------------------
