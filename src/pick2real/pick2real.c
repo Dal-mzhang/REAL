@@ -66,7 +66,11 @@ int main(int argc, char **argv) {
     sprintf(output, "%s%s%s/%s.%s.P.txt", year, month, day, net, station);
     sprintf(ymd_str, "%s%s%s", year, month, day);
     if (access(ymd_str, 0) == -1)
+      #if defined(_WIN32)
+      _mkdir(ymd_str);
+      #else
       mkdir(ymd_str, 0777);
+      #endif
     if ((fp2 = fopen(output, "at")) == NULL) {
       fprintf(stderr, "Unable to open file %s\n", output);
       exit(-1);
@@ -90,7 +94,11 @@ int main(int argc, char **argv) {
     sprintf(output, "%s%s%s/%s.%s.S.txt", year, month, day, net, station);
     sprintf(ymd_str, "%s%s%s", year, month, day);
     if (access(ymd_str, 0) == -1)
+      #if defined(_WIN32)
+      _mkdir(ymd_str);
+      #else
       mkdir(ymd_str, 0777);
+      #endif
     if ((fp2 = fopen(output, "at")) == NULL) {
       fprintf(stderr, "Unable to open file %s\n", output);
       exit(-1);
